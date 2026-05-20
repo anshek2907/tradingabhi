@@ -1720,6 +1720,20 @@ def process_signal_list(
     except Exception as e:
         logger.error(f"Result tracking error: {e}")
 
+    # ── CLEAN UP STALE SIGNALS ───────────────────────────────────────────────
+    fresh_signals = []
+    stale_count = 0
+    for sig in manager.active_signals:
+        sig_time = sig.get("time")
+        if sig_time is not None and now > sig_time + timedelta(minutes=10):
+            stale_count += 1
+        else:
+            fresh_signals.append(sig)
+            
+    if stale_count > 0:
+        logger.info(f"Cleaned up {stale_count} stale signal(s) from active queue.")
+    manager.active_signals = fresh_signals
+
     # ── FORCED DAILY SIGNALS (15:05 direct + 15:10 martingale) ──────────────
     # These ALWAYS send PRE + CONFIRMATION regardless of confidence or safety
     # thresholds. Low confidence signals carry a warning, not a skip.

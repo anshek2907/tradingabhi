@@ -284,40 +284,114 @@ def maybe_send_daily_signal_list():
     call_sigs = [s for s in signals if s.get("direction") == "CALL"]
     put_sigs  = [s for s in signals if s.get("direction") == "PUT"]
 
-    def _fmt_signal(s: dict) -> str:
-        t    = s.get("time", "??:??")
+    def _fmt_signal(s: dict, direction: str) -> str:
+        t = s.get("time", "??:??")
         pair = s.get("pair", "EURUSD")
-        ps   = s.get("pattern_strength")
-        hsr  = s.get("historical_success_rate")
-        line = f"{t} {pair}"
-        if ps is not None:
-            line += f"\nPattern Strength: {ps}"
-        if hsr is not None:
-            line += f"\nHistorical Success: {hsr}%"
-        return line
+        return f"{t} {pair} {direction}"
 
     sent_any = False
 
     if call_sigs:
-        lines = ["\U0001f4ca *TODAY GENERATED CALL SIGNALS*\n"]
+        lines = ["📊 TODAY GENERATED CALL SIGNALS\n"]
         for s in sorted(call_sigs, key=lambda x: x.get("time", "")):
-            lines.append(_fmt_signal(s))
+            lines.append(_fmt_signal(s, "CALL"))
         logger.info(f"Sending {len(call_sigs)} CALL signals to Telegram")
-        send_telegram("\n\n".join(lines))
+        send_telegram("\n".join(lines))
         sent_any = True
 
     if put_sigs:
-        lines = ["\U0001f4ca *TODAY GENERATED PUT SIGNALS*\n"]
+        lines = ["📊 TODAY GENERATED PUT SIGNALS\n"]
         for s in sorted(put_sigs, key=lambda x: x.get("time", "")):
-            lines.append(_fmt_signal(s))
+            lines.append(_fmt_signal(s, "PUT"))
         logger.info(f"Sending {len(put_sigs)} PUT signals to Telegram")
-        send_telegram("\n\n".join(lines))
+        send_telegram("\n".join(lines))
         sent_any = True
 
     if not sent_any:
         logger.info("No CALL or PUT signals to send today.")
 
     _daily_signal_list_sent_date = today
+
+
+_eod_results_sent_date = None
+EOD_SEND_HOUR = 23
+EOD_SEND_MINUTE = 30
+
+def maybe_send_eod_results():
+    global _eod_results_sent_date
+
+    now = pd.Timestamp.now(tz="Asia/Kolkata")
+    today = now.date()
+
+    if _eod_results_sent_date is not None and _eod_results_sent_date != today:
+        _eod_results_sent_date = None
+
+    if _eod_results_sent_date == today:
+        return
+
+    if now.hour < EOD_SEND_HOUR or (now.hour == EOD_SEND_HOUR and now.minute < EOD_SEND_MINUTE):
+        return
+
+    try:
+        with open(GENERATED_SIGNALS_PATH, "r") as f:
+            signals = json.load(f)
+    except Exception as e:
+        _eod_results_sent_date = today
+        return
+
+    if not signals:
+        _eod_results_sent_date = today
+        return
+
+    from signal_manager import manager, timing_db
+    
+    # We load if not loaded, though main loop likely loaded it
+    if not manager._initialized:
+        manager.load()
+        manager._initialized = True
+
+    resolved_today = [
+        t for t in manager.tracked_trades 
+        if t.get("resolved") and t.get("signal_time") is not None and t["signal_time"].date() == today
+    ]
+
+    lines = ["📊 GENERATED SIGNAL RESULTS\n"]
+    sent_any = False
+    timing_results = []
+
+    for s in sorted(signals, key=lambda x: x.get("time", "")):
+        t_str = s.get("time", "")
+        direction = s.get("direction", "")
+        
+        found_result = None
+        for rt in resolved_today:
+            # Match time and direction
+            if rt["signal_time"].strftime("%H:%M") == t_str and rt.get("direction") == direction and rt.get("source") in ("generated", "forced"):
+                found_result = rt.get("result")
+                break
+                
+        if found_result:
+            timing_results.append({
+                "time": t_str,
+                "direction": direction,
+                "result": found_result
+            })
+
+        if found_result == "WIN":
+            lines.append(f"{t_str} {s.get('pair', 'EURUSD')} {direction} ✅")
+            sent_any = True
+        elif found_result == "LOSS":
+            lines.append(f"{t_str} {s.get('pair', 'EURUSD')} {direction} ❌")
+            sent_any = True
+
+    if timing_results:
+        timing_db.run_end_of_day_update(timing_results)
+
+    if sent_any:
+        send_telegram("\n".join(lines))
+        logger.info("Sent EOD generated signal results.")
+
+    _eod_results_sent_date = today
 
 
 def fetch_signal_text_from_telegram():
@@ -458,6 +532,7 @@ def run():
         try:
             # 0) Send daily signal list at 10:00 AM (once per day).
             maybe_send_daily_signal_list()
+            maybe_send_eod_results()
 
             # 1) Update external signal list first.
             message_text = fetch_signal_text_from_telegram()

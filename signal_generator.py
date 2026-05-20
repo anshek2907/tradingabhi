@@ -23,9 +23,9 @@ FORCE_MARTINGALE_TIME = "15:10"
 FORCE_SIGNAL_CONFIDENCE_THRESHOLD = 55
 
 # Pattern engine thresholds
-MIN_SLOT_OCCURRENCES = 7        # minimum candles per time slot across 14 days
-BASE_CONFIDENCE_THRESHOLD = 68  # minimum composite score to qualify
-PATTERN_STRENGTH_THRESHOLD = 55 # minimum pattern strength from timing_db
+MIN_SLOT_OCCURRENCES = 8        # minimum candles per time slot across 14 days
+BASE_CONFIDENCE_THRESHOLD = 72  # minimum composite score to qualify
+PATTERN_STRENGTH_THRESHOLD = 60 # minimum pattern strength from timing_db
 
 # Load API key
 if os.getenv("RAILWAY_ENVIRONMENT"):
@@ -299,6 +299,10 @@ def _analyse_slot(slot_data: pd.DataFrame, atr_mean: float, direction: str) -> d
         candle_strength*0.10 +   # candle body strength
         session_strength*0.05    # session weighting (5% placeholder)
     )
+
+    # Penalize weak/noisy timings directly in composite
+    if wr < 60.0:
+        composite -= 15.0  # heavy penalty for weak historical success
 
     return {
         "direction": direction,

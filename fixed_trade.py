@@ -1,5 +1,7 @@
 import pandas as pd
 
+_IST = "Asia/Kolkata"
+
 
 def get_fixed_signal(df):
     last = df.iloc[-1]
@@ -58,7 +60,7 @@ def get_fixed_signal(df):
     else:
         return None
 
-    now = pd.Timestamp.now()
+    now = pd.Timestamp.now(tz=_IST)
 
     # Round to next minute.
     next_minute = now.ceil("min")
