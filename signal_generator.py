@@ -7,6 +7,15 @@ import requests
 from datetime import datetime, timedelta
 from indicators import add_indicators
 from learning_engine import learning_engine
+from market_safety import run_market_safety
+from market_regime import detect_market_regime, get_regime_behavior, classify_volatility_zone
+from probability_engine import (
+    probability_engine,
+    ProbabilityInputs,
+    TIER_STRONG,
+    TIER_MODERATE,
+    TIER_SKIP,
+)
 from persistence import safe_load_json, safe_save_json
 from signal_manager import timing_db
 
@@ -26,6 +35,21 @@ FORCE_SIGNAL_CONFIDENCE_THRESHOLD = 55
 MIN_SLOT_OCCURRENCES = 8        # minimum candles per time slot across 14 days
 BASE_CONFIDENCE_THRESHOLD = 72  # minimum composite score to qualify
 PATTERN_STRENGTH_THRESHOLD = 60 # minimum pattern strength from timing_db
+MIN_VOLATILITY_CLUSTER_SCORE = 55
+MIN_RECURRING_SIGNAL_GAP_MINUTES = 10
+UNSTABLE_SIGNAL_GAP_MINUTES = 20
+
+# ── Probability scoring (centralized via probability_engine.py) ───────
+# Formula:
+#   score = win_rate*0.30 + direction_consistency*0.25 + atr_quality*0.15
+#         + momentum_strength*0.10 + session_strength*0.10
+#         + volatility_quality*0.10 - reversal_risk*0.10
+#         × regime_multiplier
+#
+# Tiers: STRONG_SIGNAL >= 80 | MODERATE_SIGNAL >= 70 | SKIP < 70
+#
+# All routing via probability_engine.compute(ProbabilityInputs(...))
+_SCORE_TIERS = {TIER_STRONG: "STRONG", TIER_MODERATE: "MODERATE", TIER_SKIP: "SKIP"}
 
 # Load API key
 if os.getenv("RAILWAY_ENVIRONMENT"):
@@ -84,9 +108,15 @@ def _load_df_cache() -> pd.DataFrame | None:
                 if age_sec > _DF_CACHE_MAX_AGE_SECONDS:
                     logger.warning(f"Disk cache too old ({int(age_sec//60)}m) — rejecting.")
                     return None
+            else:
+                saved_at = datetime.utcfromtimestamp(os.path.getmtime(DF_CACHE_FILE))
+                age_sec = (datetime.utcnow() - saved_at).total_seconds()
+                if age_sec > _DF_CACHE_MAX_AGE_SECONDS:
+                    logger.warning(f"Disk cache too old ({int(age_sec//60)}m) — rejecting.")
+                    return None
             df = pd.read_pickle(DF_CACHE_FILE)
             _df_memory_cache = df
-            _df_memory_cache_time = saved_at if os.path.exists(_ts_file) else datetime.utcnow()
+            _df_memory_cache_time = saved_at
             logger.info("Loaded DataFrame from disk cache.")
             return df
         except Exception as e:
@@ -129,7 +159,14 @@ def get_historical_data(outputsize=4500) -> pd.DataFrame | None:
 
 def _enrich_df(df: pd.DataFrame) -> pd.DataFrame:
     """Add all derived columns needed by the pattern engine."""
-    df["TimeOfDay"] = df["datetime"].dt.strftime("%H:%M")
+    dt = pd.to_datetime(df["datetime"])
+    if getattr(dt.dt, "tz", None) is None:
+        dt_utc = dt.dt.tz_localize("UTC")
+    else:
+        dt_utc = dt.dt.tz_convert("UTC")
+    df["datetime_ist"] = dt_utc.dt.tz_convert("Asia/Kolkata")
+    df["TimeOfDay"] = df["datetime_ist"].dt.strftime("%H:%M")
+    df["TradeDateIST"] = df["datetime_ist"].dt.strftime("%Y-%m-%d")
 
     # Candle result
     df["Result_CALL"] = (df["Close"] > df["Open"]).astype(int)
@@ -154,6 +191,12 @@ def _enrich_df(df: pd.DataFrame) -> pd.DataFrame:
 
     # Reversal flag: candle closes opposite to previous
     df["Reversal"] = ((df["Result_CALL"] != df.shift(1)["Result_CALL"]) & df.shift(1)["Result_CALL"].notna()).astype(int)
+
+    atr = pd.to_numeric(df["ATR"], errors="coerce").astype(float).mask(lambda s: s <= 0)
+    atr_median = atr.rolling(96, min_periods=20).median().bfill().ffill()
+    df["ATR_Ratio"] = (atr / atr_median).replace([float("inf"), -float("inf")], pd.NA).fillna(1.0)
+    df["Healthy_Volatility"] = ((df["ATR_Ratio"] >= 0.65) & (df["ATR_Ratio"] <= 1.80)).astype(int)
+    df["Noisy_Sideways"] = ((df["Strength"] < 0.35) & (df["ATR_Ratio"] < 0.80)).astype(int)
 
     return df
 
@@ -321,7 +364,7 @@ def _analyse_slot(slot_data: pd.DataFrame, atr_mean: float, direction: str) -> d
     }
 
 
-def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
+def _calculate_recurring_strength_legacy(df: pd.DataFrame) -> list[dict]:
     """
     Main pattern analysis.  Scans every 5-min time slot over the last
     14 days and selects the strongest recurring directional patterns.
@@ -522,16 +565,570 @@ def _select_balanced(
 
 
 # ── State helpers ─────────────────────────────────────────
+def _score_in_range(value: float, low: float, high: float, ideal_low: float, ideal_high: float) -> float:
+    """Return a 0-100 quality score for values best kept in a healthy middle band."""
+    if pd.isna(value):
+        return 50.0
+    if ideal_low <= value <= ideal_high:
+        return 100.0
+    if value < ideal_low:
+        if value <= low:
+            return 0.0
+        return ((value - low) / max(ideal_low - low, 0.000001)) * 100
+    if value >= high:
+        return 0.0
+    return ((high - value) / max(high - ideal_high, 0.000001)) * 100
+
+
+def _session_strength(minutes_ist: int) -> float:
+    if 13 * 60 + 30 <= minutes_ist <= 21 * 60 + 30:
+        return 100.0
+    if 13 * 60 <= minutes_ist <= 22 * 60:
+        return 78.0
+    return 35.0
+
+
+def _analyse_probability_slot(
+    slot_data: pd.DataFrame,
+    market_data: pd.DataFrame,
+    direction: str,
+    session_strength: float,
+) -> dict:
+    """
+    Compute all raw sub-metrics for a time slot.
+
+    Does NOT apply the centralized scoring formula — that is done by
+    ProbabilityEngine.compute() in the caller.  This function returns a
+    flat dict of normalised metrics (each in [0, 100]) plus derived
+    helper fields (atr_avg, volatility_zone, etc.).
+
+    Eight metrics fed into ProbabilityEngine:
+        win_rate              (0-100)
+        direction_consistency (0-100)
+        atr_quality           (0-100)
+        momentum_strength     (0-100)
+        session_strength      (0-100)
+        volatility_quality    (0-100)  ← NEW: replaces old non-formula vol check
+        reversal_risk         (0-100)  ← subtracted
+        [regime / regime_confidence fed separately from regime_report]
+    """
+    if direction == "CALL":
+        historical_success    = slot_data["Result_CALL"].mean() * 100
+        direction_consistency = slot_data["Result_CALL"].mean() * 100
+        rsi_cont              = slot_data["RSI_Cont_CALL"].mean() * 100
+        mom_cont              = slot_data["Mom_Cont_CALL"].mean() * 100
+        trend_reliability     = slot_data["EMA_Trend_CALL"].mean() * 100
+    else:
+        historical_success    = slot_data["Result_PUT"].mean() * 100
+        direction_consistency = slot_data["Result_PUT"].mean() * 100
+        rsi_cont              = slot_data["RSI_Cont_PUT"].mean() * 100
+        mom_cont              = slot_data["Mom_Cont_PUT"].mean() * 100
+        trend_reliability     = slot_data["EMA_Trend_PUT"].mean() * 100
+
+    bullish_pct = slot_data["Result_CALL"].mean() * 100
+    bearish_pct = slot_data["Result_PUT"].mean() * 100
+
+    # ── ATR quality (activity × stability) ───────────────
+    atr_avg           = float(slot_data["ATR"].mean())
+    atr_std           = float(slot_data["ATR"].std() or 0.0)
+    atr_market_median = float(market_data["ATR"].median() or atr_avg or 0.0001)
+    atr_cv            = atr_std / max(atr_avg, 0.000001)
+    atr_activity_score = _score_in_range(
+        atr_avg / max(atr_market_median, 0.000001), 0.45, 2.20, 0.75, 1.55
+    )
+    atr_stability = max(0.0, min(100.0, 100.0 - (atr_cv * 140.0)))
+    atr_quality   = (atr_activity_score * 0.60) + (atr_stability * 0.40)
+
+    # ── Volatility clustering & quality ──────────────────
+    volatility_cluster_score = float(slot_data["Healthy_Volatility"].mean() * 100)
+    noisy_sideways_pct       = float(slot_data["Noisy_Sideways"].mean() * 100)
+
+    # volatility_quality is an 8th metric input to the centralized formula.
+    # It combines healthy-volatility presence and low noisy-sideways fraction.
+    volatility_quality = max(
+        0.0,
+        min(100.0, (volatility_cluster_score * 0.70) + ((100.0 - noisy_sideways_pct) * 0.30)),
+    )
+
+    # volatility_consistency kept for backward compat (used in cooldown logic)
+    volatility_consistency = max(
+        0.0,
+        min(100.0, (volatility_cluster_score * 0.75) + ((100.0 - noisy_sideways_pct) * 0.25)),
+    )
+
+    # Volatility zone (healthy / dead / noisy / unstable_spike)
+    slot_atr_ratio  = atr_avg / max(atr_market_median, 1e-8)
+    slot_noisy_frac = noisy_sideways_pct / 100.0
+    volatility_zone = classify_volatility_zone(slot_atr_ratio, slot_noisy_frac)
+
+    # ── Reversal risk ─────────────────────────────────────
+    reversal_probability = (
+        float(slot_data["Reversal"].mean() * 100)
+        if "Reversal" in slot_data.columns
+        else 50.0
+    )
+    reversal_risk = reversal_probability  # high reversal freq = high risk
+
+    # ── Momentum strength (composite) ────────────────────
+    candle_strength   = float(slot_data["Strength"].mean() * 100)
+    momentum_strength = (
+        mom_cont          * 0.45
+        + rsi_cont        * 0.25
+        + candle_strength * 0.15
+        + trend_reliability * 0.15
+    )
+
+    return {
+        # ── 8 centralized formula inputs ──────────────────
+        "win_rate":                       round(historical_success, 1),
+        "direction_consistency":          round(direction_consistency, 1),
+        "atr_quality":                    round(atr_quality, 1),
+        "momentum_strength":              round(momentum_strength, 1),
+        "session_strength":               round(session_strength, 1),
+        "volatility_quality":             round(volatility_quality, 1),
+        "reversal_risk":                  round(reversal_risk, 1),
+        # ── Aliases / backward compat keys ───────────────
+        "direction":                      direction,
+        "n":                              len(slot_data),
+        "bullish_frequency_pct":          round(bullish_pct, 1),
+        "bearish_frequency_pct":          round(bearish_pct, 1),
+        "historical_win_rate_pct":        round(historical_success, 1),
+        "historical_success_rate":        round(historical_success, 1),
+        "atr_avg":                        round(atr_avg, 6),
+        "atr_stability":                  round(atr_stability, 1),
+        "atr_activity_score":             round(atr_activity_score, 1),
+        "momentum_continuation_strength": round(momentum_strength, 1),
+        "reversal_probability":           round(reversal_probability, 1),
+        "volatility_cluster_score":       round(volatility_cluster_score, 1),
+        "volatility_consistency":         round(volatility_consistency, 1),
+        "volatility_zone":                volatility_zone,
+        "trend_continuation_reliability": round(trend_reliability, 1),
+        "candle_strength":                round(candle_strength, 1),
+    }
+
+
+def _classify_live_market(df: pd.DataFrame) -> dict:
+    """
+    Market classification driven by Market Regime Detection.
+
+    Calls detect_market_regime() and translates its output into the
+    legacy-compatible dict: {profile, target, threshold, score, regime_report}.
+
+    profile values (for backward compat):
+        "strong"   → TRENDING
+        "high_vol" → HIGH_VOLATILITY
+        "reversal" → REVERSAL_HEAVY
+        "moderate" → (fallback moderate)
+        "weak"     → SIDEWAYS or insufficient data
+    """
+    if df is None or len(df) < 80:
+        return {
+            "profile":       "weak",
+            "target":        3,
+            "threshold":     78,
+            "score":         0,
+            "regime":        "SIDEWAYS",
+            "regime_report": None,
+        }
+
+    regime_report = detect_market_regime(df)
+    regime        = regime_report["regime"]
+    behavior      = regime_report["behavior"]
+    conf          = regime_report["confidence"]
+
+    # Map regime → legacy profile string
+    profile_map = {
+        "TRENDING":        "strong",
+        "HIGH_VOLATILITY": "high_vol",
+        "REVERSAL_HEAVY":  "reversal",
+        "SIDEWAYS":        "weak",
+    }
+    profile = profile_map.get(regime, "weak")
+
+    return {
+        "profile":       profile,
+        "target":        behavior["target"],
+        "threshold":     behavior["threshold"],
+        "score":         conf,
+        "regime":        regime,
+        "regime_report": regime_report,
+    }
+
+
+def _live_confirmation_ok(
+    df: pd.DataFrame,
+    direction: str,
+    candidate_confidence: float,
+    live_direction: str | None = None,
+) -> tuple[bool, str, float]:
+    if df is None or len(df) < 80:
+        return False, "insufficient live data", candidate_confidence
+
+    if live_direction is None:
+        live_direction, _ = decide_direction_live(df)
+    if live_direction != direction:
+        return False, f"live direction mismatch ({live_direction})", candidate_confidence
+
+    market_ok, market_msg, safety_penalty = run_market_safety(df, direction)
+    adjusted_confidence = candidate_confidence - safety_penalty
+    if not market_ok:
+        return False, f"market safety rejected: {market_msg}", adjusted_confidence
+
+    last = df.iloc[-1]
+    prev = df.iloc[-2]
+    atr = float(last["ATR"]) if not pd.isna(last.get("ATR")) else 0.0
+    atr_mean = float(df["ATR"].tail(80).mean() or 0.0)
+    rsi_now = float(last["RSI"])
+    rsi_prev = float(prev["RSI"])
+    ema50 = float(last["EMA50"])
+    ema200 = float(last["EMA200"])
+
+    if atr_mean <= 0 or atr < atr_mean * 0.60:
+        return False, "live ATR too weak", adjusted_confidence
+    if atr > atr_mean * 3.00:
+        return False, "live ATR spike too unstable", adjusted_confidence
+    if atr > atr_mean * 2.20:
+        adjusted_confidence -= 8
+    if direction == "CALL":
+        if not (ema50 > ema200 and rsi_now > 50 and rsi_now >= rsi_prev):
+            return False, "live EMA/RSI not bullish", adjusted_confidence
+    else:
+        if not (ema50 < ema200 and rsi_now < 50 and rsi_now <= rsi_prev):
+            return False, "live EMA/RSI not bearish", adjusted_confidence
+
+    return adjusted_confidence >= 68, "live confirmation passed", adjusted_confidence
+
+
+def _minutes_from_time(time_str: str) -> int:
+    h, m = map(int, time_str.split(":"))
+    return h * 60 + m
+
+
+def _metric_float(metrics: dict, key: str, default: float = 0.0) -> float:
+    try:
+        return round(float(metrics.get(key, default)), 3)
+    except Exception:
+        return default
+
+
+def _select_ranked_with_cooldown(candidates: list[dict], total_target: int) -> list[dict]:
+    """
+    Deduplicate by time slot (keep highest probability_score), rank by
+    probability_score descending, then apply minimum-gap cooldown.
+    STRONG_SIGNAL candidates have priority over MODERATE_SIGNAL candidates.
+    """
+    best_by_time: dict[str, dict] = {}
+    for candidate in candidates:
+        existing = best_by_time.get(candidate["time"])
+        if existing is None or (
+            candidate.get("probability_score", 0) > existing.get("probability_score", 0)
+        ):
+            best_by_time[candidate["time"]] = candidate
+
+    # Sort: STRONG first, then MODERATE, within each tier by probability_score desc
+    def _rank_key(x: dict) -> tuple:
+        tier_order = {TIER_STRONG: 2, TIER_MODERATE: 1, TIER_SKIP: 0}
+        return (
+            tier_order.get(x.get("signal_tier", TIER_SKIP), 0),
+            x.get("probability_score", 0.0),
+            x.get("pattern_strength", 0),
+        )
+
+    ranked = sorted(best_by_time.values(), key=_rank_key, reverse=True)
+
+    final: list[dict] = []
+    for candidate in ranked:
+        if len(final) >= total_target:
+            break
+        candidate_minute = _minutes_from_time(candidate["time"])
+        # Unstable signals need a wider cooldown gap
+        unstable = (
+            candidate.get("volatility_consistency", 0) < 70
+            or candidate.get("reversal_probability", 100) > 42
+        )
+        required_gap = UNSTABLE_SIGNAL_GAP_MINUTES if unstable else MIN_RECURRING_SIGNAL_GAP_MINUTES
+        if any(
+            abs(candidate_minute - _minutes_from_time(selected["time"])) < required_gap
+            for selected in final
+        ):
+            continue
+        final.append(candidate)
+
+    if len(final) < 3:
+        logger.warning(f"Only {len(final)} generated timings passed quality filters today.")
+
+    return final
+
+
+def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
+    """
+    Advanced recurring probability engine.
+
+    Pipeline:
+      1. Detect market regime (TRENDING / SIDEWAYS / HIGH_VOLATILITY / REVERSAL_HEAVY)
+      2. Apply regime-adaptive targets and thresholds
+      3. Score every IST time slot with weighted probability formula
+      4. Classify volatility zone per slot
+      5. Apply learning-engine and timing-DB adjustments
+      6. Gate each candidate through live confirmation
+      7. Rank and return the top signals for the day
+    """
+    if df is None or len(df) < 500:
+        logger.warning("Insufficient data for recurring pattern analysis.")
+        return []
+
+    if "datetime_ist" not in df.columns or "Healthy_Volatility" not in df.columns:
+        df = _enrich_df(df.copy())
+
+    cutoff = df["datetime_ist"].max() - pd.Timedelta(days=14)
+    df14   = df[df["datetime_ist"] >= cutoff].copy()
+    unique_times = sorted(df14["TimeOfDay"].unique())
+
+    # ── Step 1: Market Regime Detection ──────────────────
+    market_profile  = _classify_live_market(df)
+    regime          = market_profile["regime"]
+    regime_report   = market_profile["regime_report"]
+    behavior        = get_regime_behavior(regime)
+
+    # Regime-adaptive parameters
+    total_target  = behavior["target"]
+    threshold     = max(BASE_CONFIDENCE_THRESHOLD, behavior["threshold"])
+    min_pat_str   = behavior["min_pattern_str"]
+    rev_prob_max  = behavior["reversal_prob_max"]
+    atr_ratio_min = behavior["atr_ratio_min"]
+    atr_ratio_max = behavior["atr_ratio_max"]
+
+    logger.info(
+        f"[Regime] Using regime={regime} | target={total_target} | "
+        f"threshold={threshold} | min_pat_str={min_pat_str} | "
+        f"rev_prob_max={rev_prob_max}"
+    )
+
+    today_ist      = pd.Timestamp.now(tz="Asia/Kolkata").strftime("%Y-%m-%d")
+    live_direction, _ = decide_direction_live(df)
+
+    # ATR median for volatility zone classification
+    atr_market_median = float(
+        pd.to_numeric(df14["ATR"], errors="coerce").tail(96).median() or 0.0001
+    )
+
+    candidates: list[dict] = []
+    regime_confidence = market_profile["score"]  # 0-100 regime detection confidence
+
+    for ist_time_str in unique_times:
+        slot_data = df14[df14["TimeOfDay"] == ist_time_str]
+        if len(slot_data) < MIN_SLOT_OCCURRENCES:
+            continue
+
+        try:
+            h, m = map(int, ist_time_str.split(":"))
+        except ValueError:
+            continue
+        ist_minutes = h * 60 + m
+
+        if not (13 * 60 <= ist_minutes <= 22 * 60):
+            continue
+
+        session_str = _session_strength(ist_minutes)
+
+        for direction in ("CALL", "PUT"):
+            metrics  = _analyse_probability_slot(slot_data, df14, direction, session_str)
+            vol_zone = metrics["volatility_zone"]
+
+            # ── Pre-score hard gates (fast rejection before scoring) ──
+            # 1. Extreme volatility zones: always skip regardless of score
+            if vol_zone in ("dead", "noisy", "unstable_spike"):
+                logger.debug(
+                    "[Slot] Skip %s %s — vol_zone=%s", ist_time_str, direction, vol_zone
+                )
+                continue
+
+            # 2. ATR ratio vs regime bounds
+            slot_atr_ratio = metrics["atr_avg"] / max(atr_market_median, 1e-8)
+            if slot_atr_ratio < atr_ratio_min or slot_atr_ratio > atr_ratio_max:
+                logger.debug(
+                    "[Slot] Skip %s %s — atr_ratio=%.2f out of bounds [%.2f,%.2f]",
+                    ist_time_str, direction, slot_atr_ratio, atr_ratio_min, atr_ratio_max,
+                )
+                continue
+
+            # ── Centralized probability scoring ──────────────────────
+            prob_inputs = ProbabilityInputs(
+                win_rate              = metrics["win_rate"],
+                direction_consistency = metrics["direction_consistency"],
+                atr_quality           = metrics["atr_quality"],
+                momentum_strength     = metrics["momentum_strength"],
+                session_strength      = metrics["session_strength"],
+                volatility_quality    = metrics["volatility_quality"],
+                reversal_risk         = metrics["reversal_risk"],
+                regime                = regime,
+                regime_confidence     = float(regime_confidence),
+                volatility_zone       = vol_zone,
+                time_str              = ist_time_str,
+                direction             = direction,
+            )
+            prob_result = probability_engine.compute(prob_inputs)
+
+            # ── Tier gate: SKIP → discard immediately ─────────────────
+            if not probability_engine.is_acceptable(prob_result):
+                logger.debug(
+                    "[Score] SKIP %s %s — prob_score=%.1f tier=%s",
+                    ist_time_str, direction,
+                    prob_result.probability_score, prob_result.signal_tier,
+                )
+                continue
+
+            # ── REVERSAL_HEAVY extra gate ─────────────────────────────
+            # In reversal-heavy markets only STRONG signals are allowed
+            if regime == "REVERSAL_HEAVY" and prob_result.signal_tier != TIER_STRONG:
+                logger.info(
+                    "[Regime] %s %s paused — reversal-heavy requires STRONG "
+                    "(score=%.1f tier=%s)",
+                    ist_time_str, direction,
+                    prob_result.probability_score, prob_result.signal_tier,
+                )
+                continue
+
+            # ── Adaptive learning adjustments ────────────────────────
+            rsi_avg    = float(slot_data["RSI"].mean()) if "RSI" in slot_data.columns else 50.0
+            base_conf  = prob_result.probability_score  # use prob score as base confidence
+
+            adj_legacy = learning_engine.get_adaptive_adjustment(
+                ist_time_str, direction, int(base_conf),
+                metrics["atr_avg"], rsi_avg,
+                source="generated",
+                regime=regime,
+            )
+            if adj_legacy <= -3:
+                logger.debug(
+                    "[Learn] Veto %s %s — learning adj=%d",
+                    ist_time_str, direction, adj_legacy,
+                )
+                continue
+
+            # Blend learning and timing-db adjustments into confidence
+            adj_timing       = timing_db.get_adaptive_adjustment(ist_time_str, direction, regime=regime)
+            learned_strength = timing_db.get_regime_pattern_strength(ist_time_str, direction, regime)
+
+            # Final blended confidence = prob_score (primary) + learning tweaks
+            blended_conf = probability_engine.score_to_confidence(
+                prob_result.probability_score,
+                base_conf + adj_legacy + adj_timing,
+            )
+
+            if learned_strength < PATTERN_STRENGTH_THRESHOLD and blended_conf < threshold:
+                logger.debug(
+                    "[DB] Skip %s %s — learned_str=%d blended_conf=%.1f < threshold=%d",
+                    ist_time_str, direction, learned_strength, blended_conf, threshold,
+                )
+                continue
+
+            # ── Live confirmation gate ────────────────────────────────
+            live_ok, live_reason, adjusted_conf = _live_confirmation_ok(
+                df, direction, blended_conf, live_direction
+            )
+            if not live_ok:
+                logger.info(
+                    "[Pattern] Reject %s %s: %s", ist_time_str, direction, live_reason
+                )
+                continue
+
+            if adjusted_conf < threshold:
+                continue
+
+            # ── Final pattern strength (blended) ─────────────────────
+            # 70% probability score + 30% timing-DB learned strength
+            pattern_strength = int(round(
+                (prob_result.probability_score * 0.70) + (learned_strength * 0.30)
+            ))
+            pattern_strength = max(0, min(100, pattern_strength))
+
+            logger.info(
+                "[Slot] %s %s | tier=%s | prob=%.1f | conf=%d | "
+                "pat_str=%d | win=%.1f%% | rev=%.1f | zone=%s",
+                ist_time_str, direction,
+                prob_result.signal_tier, prob_result.probability_score,
+                int(adjusted_conf), pattern_strength,
+                metrics["win_rate"], metrics["reversal_risk"], vol_zone,
+            )
+
+            candidates.append({
+                "time":                           ist_time_str,
+                "pair":                           PAIR,
+                "direction":                      direction,
+                # ── Centralized score (primary authority) ────────
+                "probability_score":              round(prob_result.probability_score, 2),
+                "signal_tier":                    prob_result.signal_tier,
+                # ── Published confidence (blended) ───────────────
+                "confidence":                     int(min(99, adjusted_conf)),
+                # ── Pattern strength ─────────────────────────────
+                "pattern_strength":               pattern_strength,
+                "pattern_strength_score":         pattern_strength,
+                # ── Sub-scores (8 formula inputs) ────────────────
+                "historical_success_rate":        _metric_float(metrics, "win_rate"),
+                "historical_win_rate_pct":        _metric_float(metrics, "win_rate"),
+                "bullish_frequency_pct":          _metric_float(metrics, "bullish_frequency_pct"),
+                "bearish_frequency_pct":          _metric_float(metrics, "bearish_frequency_pct"),
+                "direction_consistency":          _metric_float(metrics, "direction_consistency"),
+                "atr_quality":                    _metric_float(metrics, "atr_quality"),
+                "atr_stability":                  _metric_float(metrics, "atr_stability"),
+                "momentum_strength":              _metric_float(metrics, "momentum_strength"),
+                "momentum_continuation_strength": _metric_float(metrics, "momentum_strength"),
+                "session_strength":               _metric_float(metrics, "session_strength"),
+                "volatility_quality":             _metric_float(metrics, "volatility_quality"),
+                "volatility_cluster_score":       _metric_float(metrics, "volatility_cluster_score"),
+                "volatility_consistency":         _metric_float(metrics, "volatility_consistency"),
+                "reversal_probability":           _metric_float(metrics, "reversal_probability"),
+                "reversal_risk":                  _metric_float(metrics, "reversal_risk"),
+                "trend_continuation_reliability": _metric_float(metrics, "trend_continuation_reliability"),
+                # ── Score breakdown (for analysis / logging) ─────
+                "score_breakdown": prob_result.as_dict(),
+                # ── Context ──────────────────────────────────────
+                "volatility_zone":                vol_zone,
+                "market_profile":                 market_profile["profile"],
+                "market_regime":                  regime,
+                "regime_confidence":              regime_confidence,
+                "generated_date":                 today_ist,
+                "timezone":                       "Asia/Kolkata",
+                "source":                         "generated",
+            })
+
+    # ── Rank and select ───────────────────────────────────
+    final = _select_ranked_with_cooldown(candidates, total_target=total_target)
+    final.sort(key=lambda x: x["time"])
+
+    # Log final selected set
+    for signal in final:
+        logger.info(
+            "[Pattern] %s %s | tier=%s | prob=%.1f | conf=%d%% | "
+            "pat_str=%d | win=%.1f%% | regime=%s | zone=%s",
+            signal["time"], signal["direction"],
+            signal.get("signal_tier", "?"),
+            signal.get("probability_score", 0.0),
+            signal["confidence"],
+            signal["pattern_strength"],
+            signal["historical_success_rate"],
+            signal.get("market_regime", "?"),
+            signal.get("volatility_zone", "?"),
+        )
+
+    return final
+
+
+def _today_ist_str() -> str:
+    return pd.Timestamp.now(tz="Asia/Kolkata").strftime("%Y-%m-%d")
+
+
 def has_run_today() -> bool:
     try:
         state = safe_load_json(STATE_FILE, default={})
-        return state.get("last_run_date") == datetime.now().strftime("%Y-%m-%d")
+        return state.get("last_run_date") == _today_ist_str()
     except Exception:
         return False
 
 
 def update_run_state() -> None:
-    safe_save_json(STATE_FILE, {"last_run_date": datetime.now().strftime("%Y-%m-%d")})
+    safe_save_json(STATE_FILE, {"last_run_date": _today_ist_str(), "timezone": "Asia/Kolkata"})
 
 
 # ── Main daily generation ─────────────────────────────────

@@ -1,0 +1,13 @@
+[
+    {
+        "timestamp": "2026-05-21T23:14:13.597508",
+        "time_of_day": "15:05",
+        "direction": "CALL",
+        "confidence": 75,
+        "atr": 0.00012,
+        "rsi": 55.0,
+        "result": "WIN",
+        "source": "telegram",
+        "regime": "TRENDING"
+    }
+]

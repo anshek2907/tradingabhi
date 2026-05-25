@@ -238,6 +238,44 @@ DAILY_SEND_HOUR = 10    # 10:00 AM IST
 DAILY_SEND_MINUTE = 0
 
 
+def _filter_generated_signals_for_today(signals, now):
+    """Keep only fresh, correctly dated IST generated signals."""
+    if not isinstance(signals, list):
+        return []
+
+    today = now.date().isoformat()
+    file_date = None
+    try:
+        file_date = pd.Timestamp(os.path.getmtime(GENERATED_SIGNALS_PATH), unit="s", tz="UTC").tz_convert("Asia/Kolkata").date().isoformat()
+    except Exception:
+        file_date = None
+    fresh = []
+    for sig in signals:
+        try:
+            direction = str(sig.get("direction", "")).upper()
+            if direction not in ("CALL", "PUT"):
+                continue
+
+            generated_date = sig.get("generated_date")
+            if generated_date and str(generated_date) != today:
+                continue
+            if not generated_date and file_date is not None and file_date != today:
+                continue
+
+            h, m = map(int, str(sig.get("time", "")).split(":"))
+            signal_time = now.normalize() + pd.Timedelta(hours=h, minutes=m)
+            if signal_time < now:
+                continue
+
+            sig["direction"] = direction
+            sig["pair"] = str(sig.get("pair", "EURUSD")).replace("/", "")
+            fresh.append(sig)
+        except Exception:
+            continue
+
+    return sorted(fresh, key=lambda x: x.get("time", ""))
+
+
 def maybe_send_daily_signal_list():
     """
     Send generated_signals.json to Telegram once per day at 10:00 AM IST.
@@ -280,35 +318,46 @@ def maybe_send_daily_signal_list():
         _daily_signal_list_sent_date = today
         return
 
+    signals = _filter_generated_signals_for_today(signals, now)
+    if not signals:
+        logger.info("No fresh generated signals for today — skipping daily send")
+        _daily_signal_list_sent_date = today
+        return
+
+    try:
+        with open(GENERATED_SIGNALS_PATH, "w", encoding="utf-8") as f:
+            json.dump(signals, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Could not persist generated signal cleanup: {e}")
+
     # Separate CALL and PUT (exclude forced martingale duplicates in display)
     call_sigs = [s for s in signals if s.get("direction") == "CALL"]
     put_sigs  = [s for s in signals if s.get("direction") == "PUT"]
 
     def _fmt_signal(s: dict, direction: str) -> str:
         t = s.get("time", "??:??")
-        pair = s.get("pair", "EURUSD")
+        pair = str(s.get("pair", "EURUSD")).replace("/", "")
         return f"{t} {pair} {direction}"
 
-    sent_any = False
+    lines = []
 
     if call_sigs:
-        lines = ["📊 TODAY GENERATED CALL SIGNALS\n"]
+        lines.append("📊 TODAY GENERATED CALL SIGNALS")
         for s in sorted(call_sigs, key=lambda x: x.get("time", "")):
             lines.append(_fmt_signal(s, "CALL"))
-        logger.info(f"Sending {len(call_sigs)} CALL signals to Telegram")
-        send_telegram("\n".join(lines))
-        sent_any = True
 
     if put_sigs:
-        lines = ["📊 TODAY GENERATED PUT SIGNALS\n"]
+        if lines:
+            lines.append("")
+        lines.append("📊 TODAY GENERATED PUT SIGNALS")
         for s in sorted(put_sigs, key=lambda x: x.get("time", "")):
             lines.append(_fmt_signal(s, "PUT"))
-        logger.info(f"Sending {len(put_sigs)} PUT signals to Telegram")
-        send_telegram("\n".join(lines))
-        sent_any = True
 
-    if not sent_any:
+    if not lines:
         logger.info("No CALL or PUT signals to send today.")
+    else:
+        logger.info(f"Sending generated daily list to Telegram ({len(signals)} signals)")
+        send_telegram("\n".join(lines))
 
     _daily_signal_list_sent_date = today
 
@@ -343,7 +392,16 @@ def maybe_send_eod_results():
         _eod_results_sent_date = today
         return
 
-    from signal_manager import manager, timing_db
+    signals = [
+        s for s in signals
+        if not s.get("generated_date") or str(s.get("generated_date")) == today.isoformat()
+    ]
+    if not signals:
+        _eod_results_sent_date = today
+        return
+
+    from signal_manager import timing_db
+    manager = signal_manager
     
     # We load if not loaded, though main loop likely loaded it
     if not manager._initialized:
@@ -355,7 +413,7 @@ def maybe_send_eod_results():
         if t.get("resolved") and t.get("signal_time") is not None and t["signal_time"].date() == today
     ]
 
-    lines = ["📊 GENERATED SIGNAL RESULTS\n"]
+    lines = ["📊 GENERATED SIGNAL RESULTS"]
     sent_any = False
     timing_results = []
 
@@ -378,10 +436,12 @@ def maybe_send_eod_results():
             })
 
         if found_result == "WIN":
-            lines.append(f"{t_str} {s.get('pair', 'EURUSD')} {direction} ✅")
+            pair = str(s.get("pair", "EURUSD")).replace("/", "")
+            lines.append(f"{t_str} {pair} {direction} ✅ WIN")
             sent_any = True
         elif found_result == "LOSS":
-            lines.append(f"{t_str} {s.get('pair', 'EURUSD')} {direction} ❌")
+            pair = str(s.get("pair", "EURUSD")).replace("/", "")
+            lines.append(f"{t_str} {pair} {direction} ❌ LOSS")
             sent_any = True
 
     if timing_results:

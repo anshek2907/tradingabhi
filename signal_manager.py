@@ -82,14 +82,36 @@ class TimingPerformanceDB:
                 "historical_success_rate": 50.0,
                 "last_updated": datetime.now().strftime("%Y-%m-%d"),
                 "daily_history": [],
+                # Per-regime performance breakdown
+                "regime_history": {
+                    "TRENDING":        {"trades": 0, "wins": 0},
+                    "SIDEWAYS":        {"trades": 0, "wins": 0},
+                    "HIGH_VOLATILITY": {"trades": 0, "wins": 0},
+                    "REVERSAL_HEAVY":  {"trades": 0, "wins": 0},
+                },
             }
-        return self._db[key]
+        # Back-fill regime_history for records created before this feature
+        rec = self._db[key]
+        if "regime_history" not in rec:
+            rec["regime_history"] = {
+                "TRENDING":        {"trades": 0, "wins": 0},
+                "SIDEWAYS":        {"trades": 0, "wins": 0},
+                "HIGH_VOLATILITY": {"trades": 0, "wins": 0},
+                "REVERSAL_HEAVY":  {"trades": 0, "wins": 0},
+            }
+        return rec
 
     # ──────────────────────────────────────────────────────
     # Public API
     # ──────────────────────────────────────────────────────
 
-    def record_result(self, time_str: str, direction: str, result: str) -> None:
+    def record_result(
+        self,
+        time_str: str,
+        direction: str,
+        result: str,
+        regime: str = "UNKNOWN",
+    ) -> None:
         """
         Record WIN or LOSS for a timing slot after a trading day.
 
@@ -97,13 +119,14 @@ class TimingPerformanceDB:
             time_str:  IST time e.g. "15:05"
             direction: "CALL" or "PUT"
             result:    "WIN" or "LOSS"
+            regime:    market regime at trade time (optional, for regime history tracking)
         """
         result = result.upper()
         if result not in ("WIN", "LOSS"):
             logger.warning(f"[TimingDB] Invalid result '{result}' for {time_str}|{direction}")
             return
 
-        rec = self._get_record(time_str, direction)
+        rec   = self._get_record(time_str, direction)
         today = datetime.now().strftime("%Y-%m-%d")
 
         # Add to daily history (prevent duplicate same-day entries)
@@ -117,13 +140,17 @@ class TimingPerformanceDB:
         rec["daily_history"] = [e for e in history if e["date"] >= cutoff]
 
         # Recompute aggregate stats from full history
-        all_wins = sum(1 for e in rec["daily_history"] if e["result"] == "WIN")
+        all_wins  = sum(1 for e in rec["daily_history"] if e["result"] == "WIN")
         all_total = len(rec["daily_history"])
-        rec["total_trades"] = all_total
-        rec["wins"] = all_wins
-        rec["losses"] = all_total - all_wins
+        rec["total_trades"]           = all_total
+        rec["wins"]                   = all_wins
+        rec["losses"]                 = all_total - all_wins
         rec["historical_success_rate"] = round((all_wins / all_total) * 100, 1) if all_total > 0 else 50.0
-        rec["last_updated"] = today
+        rec["last_updated"]           = today
+
+        # Update regime-specific performance
+        if regime and regime != "UNKNOWN":
+            self._update_regime_history(rec, regime, result)
 
         # Recalculate pattern strength
         rec["pattern_strength"] = self._compute_pattern_strength(rec)
@@ -157,15 +184,26 @@ class TimingPerformanceDB:
         # Linear map: strength 0→0.80, 50→1.00, 100→1.20
         return round(0.80 + (strength / 100) * 0.40, 3)
 
-    def get_adaptive_adjustment(self, time_str: str, direction: str) -> int:
+    def get_adaptive_adjustment(
+        self,
+        time_str: str,
+        direction: str,
+        regime: str = "UNKNOWN",
+    ) -> int:
         """
         Return an integer adjustment to add to base confidence.
-        Range: -10 … +10
+        Range: -12 … +12
+        Includes regime-specific bonus/penalty when regime history exists.
         """
         strength = self.get_pattern_strength(time_str, direction)
-        # Map strength (0-100) to adjustment (-10 … +10)
-        adjustment = int(round((strength - 50) / 5))
-        return max(-10, min(10, adjustment))
+        # Map strength (0-100) to base adjustment (-10 … +10)
+        base_adj = int(round((strength - 50) / 5))
+        base_adj = max(-10, min(10, base_adj))
+
+        # Add regime-specific delta
+        regime_adj = self._compute_regime_adjustment(time_str, direction, regime)
+        total = base_adj + regime_adj
+        return max(-12, min(12, total))
 
     def get_all_stats(self) -> dict:
         """Return the full timing stats dict (read-only copy)."""
@@ -194,7 +232,12 @@ class TimingPerformanceDB:
         Call once after each trading day to apply batch updates.
 
         Args:
-            results: list of {"time": "HH:MM", "direction": "CALL|PUT", "result": "WIN|LOSS"}
+            results: list of {
+                "time": "HH:MM",
+                "direction": "CALL|PUT",
+                "result": "WIN|LOSS",
+                "regime": "TRENDING|SIDEWAYS|HIGH_VOLATILITY|REVERSAL_HEAVY"  (optional)
+            }
         """
         logger.info(f"[TimingDB] Running end-of-day update for {len(results)} trades")
         for r in results:
@@ -202,6 +245,7 @@ class TimingPerformanceDB:
                 r.get("time", ""),
                 r.get("direction", ""),
                 r.get("result", "LOSS"),
+                regime=r.get("regime", "UNKNOWN"),
             )
 
     # ──────────────────────────────────────────────────────
@@ -214,16 +258,17 @@ class TimingPerformanceDB:
         Calculate Pattern Strength Score (0-100) from a record.
 
         Factors:
-          • Historical success rate (weight 50%)
-          • Recent consistency (last 7 days win rate, weight 30%)
-          • Sample size confidence (weight 20%)
+          • Historical success rate     (weight 45%)
+          • Recent consistency (7 days) (weight 30%)
+          • Sample size confidence      (weight 20%)
+          • Regime fit bonus/penalty    (±5 points)
         """
-        total = rec.get("total_trades", 0)
+        total        = rec.get("total_trades", 0)
         success_rate = rec.get("historical_success_rate", 50.0)
         history: list = rec.get("daily_history", [])
 
         # 1. Base score from historical success rate
-        base_score = success_rate * 0.50  # 0-50
+        base_score = success_rate * 0.45  # 0-45
 
         # 2. Recent consistency (last 7 calendar days)
         cutoff_7d = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
@@ -241,6 +286,52 @@ class TimingPerformanceDB:
 
         raw = base_score + recent_score + sample_score
         return max(0, min(100, int(round(raw))))
+
+    @staticmethod
+    def _update_regime_history(rec: dict, regime: str, result: str) -> None:
+        """Update per-regime win/loss counters in the record."""
+        rh = rec.setdefault("regime_history", {})
+        if regime not in rh:
+            rh[regime] = {"trades": 0, "wins": 0}
+        rh[regime]["trades"] += 1
+        if result == "WIN":
+            rh[regime]["wins"] += 1
+
+    def _compute_regime_adjustment(self, time_str: str, direction: str, regime: str) -> int:
+        """
+        Return -5 / 0 / +5 based on how well this timing performs in `regime`.
+        Only applied when there are at least 3 regime-specific trades.
+        """
+        if not regime or regime == "UNKNOWN":
+            return 0
+        key = self._key(time_str, direction)
+        rec = self._db.get(key, {})
+        rh  = rec.get("regime_history", {}).get(regime, {})
+        trades = rh.get("trades", 0)
+        wins   = rh.get("wins",   0)
+        if trades < 3:
+            return 0
+        win_rate = wins / trades
+        if win_rate >= 0.70:
+            return 5
+        if win_rate <= 0.35:
+            return -5
+        return 0
+
+    def get_regime_pattern_strength(
+        self,
+        time_str: str,
+        direction: str,
+        regime: str = "UNKNOWN",
+    ) -> int:
+        """
+        Return pattern strength adjusted for regime-specific performance.
+        Used by signal_generator to get a more accurate strength estimate
+        when regime history is available.
+        """
+        base     = self.get_pattern_strength(time_str, direction)
+        regime_adj = self._compute_regime_adjustment(time_str, direction, regime)
+        return max(0, min(100, base + regime_adj))
 
 
 # ─────────────────────────────────────────────────────────

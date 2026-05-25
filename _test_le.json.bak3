@@ -1,0 +1,26 @@
+[
+    {
+        "timestamp": "2026-05-21T23:31:46.811149",
+        "time_of_day": "15:05",
+        "direction": "CALL",
+        "confidence": 80,
+        "atr": 0.00012,
+        "rsi": 55.0,
+        "result": "WIN",
+        "source": "generated",
+        "regime": "TRENDING",
+        "probability_score": 83.5
+    },
+    {
+        "timestamp": "2026-05-21T23:31:46.815751",
+        "time_of_day": "15:05",
+        "direction": "CALL",
+        "confidence": 80,
+        "atr": 0.00012,
+        "rsi": 55.0,
+        "result": "WIN",
+        "source": "generated",
+        "regime": "TRENDING",
+        "probability_score": 83.5
+    }
+]

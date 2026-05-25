@@ -306,15 +306,28 @@ def load_generated_signals() -> List[SignalEntry]:
         return []
 
     tz = _get_timezone()
-    today = _now().date()
+    now = _now()
+    today = now.date()
+    file_date = None
+    try:
+        mtime = datetime.fromtimestamp(os.path.getmtime(GENERATED_SIGNALS_FILE), tz=tz)
+        file_date = mtime.date()
+    except Exception:
+        file_date = None
+
     entries = []
     for sig in generated:
         try:
             time_str = str(sig.get("time", ""))
             pair = str(sig.get("pair", "EURUSD")).upper()
             direction = str(sig.get("direction", "")).upper()
+            generated_date = sig.get("generated_date")
 
             if not time_str or direction not in ("CALL", "PUT"):
+                continue
+            if generated_date and str(generated_date) != today.isoformat():
+                continue
+            if not generated_date and file_date is not None and file_date != today:
                 continue
 
             parts = time_str.split(":")
@@ -324,6 +337,8 @@ def load_generated_signals() -> List[SignalEntry]:
                 sig_time = sig_time.replace(tzinfo=tz)
 
             if sig_time.time() < MARKET_OPEN:
+                continue
+            if now > sig_time + MARTINGALE_ENTRY_DELAY + timedelta(seconds=SIGNAL_WINDOW_SECONDS):
                 continue
 
             raw_line = f"{time_str} {pair} {direction}"
@@ -1725,7 +1740,8 @@ def process_signal_list(
     stale_count = 0
     for sig in manager.active_signals:
         sig_time = sig.get("time")
-        if sig_time is not None and now > sig_time + timedelta(minutes=10):
+        stale_after = sig.get("martingale_time") or sig_time
+        if stale_after is not None and now > stale_after + timedelta(seconds=SIGNAL_WINDOW_SECONDS + 30):
             stale_count += 1
         else:
             fresh_signals.append(sig)
