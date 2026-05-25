@@ -333,6 +333,227 @@ class TimingPerformanceDB:
         regime_adj = self._compute_regime_adjustment(time_str, direction, regime)
         return max(0, min(100, base + regime_adj))
 
+    # ──────────────────────────────────────────────────────
+    # Regime Performance Memory
+    # ──────────────────────────────────────────────────────
+
+    def get_regime_overall_stats(self) -> dict:
+        """
+        Aggregate regime win rates across ALL timing slots in the DB.
+
+        Returns a dict:
+        {
+            "TRENDING":        {"win_rate": 68.2, "total_trades": 45},
+            "SIDEWAYS":        {"win_rate": 51.0, "total_trades": 20},
+            "HIGH_VOLATILITY": {"win_rate": 55.0, "total_trades": 12},
+            "REVERSAL_HEAVY":  {"win_rate": 48.0, "total_trades": 8},
+        }
+        """
+        REGIMES = ["TRENDING", "SIDEWAYS", "HIGH_VOLATILITY", "REVERSAL_HEAVY"]
+        agg: dict[str, dict] = {r: {"wins": 0, "total": 0} for r in REGIMES}
+
+        for rec in self._db.values():
+            rh = rec.get("regime_history", {})
+            for regime in REGIMES:
+                rd = rh.get(regime, {})
+                agg[regime]["wins"]  += rd.get("wins",   0)
+                agg[regime]["total"] += rd.get("trades", 0)
+
+        result: dict = {}
+        for regime, data in agg.items():
+            total = data["total"]
+            wins  = data["wins"]
+            result[regime] = {
+                "win_rate":     round((wins / total * 100) if total > 0 else 50.0, 1),
+                "total_trades": total,
+            }
+        return result
+
+    def adapt_regime_thresholds(self, base_thresholds: dict) -> dict:
+        """
+        Dynamically adjust regime minimum score thresholds based on
+        live regime performance from the DB.
+
+        Rules:
+          win_rate > 75% → lower threshold by 2 pts (allow more signals)
+          win_rate > 65% → lower threshold by 1 pt
+          win_rate < 45% → raise  threshold by 3 pts (be more cautious)
+          win_rate < 55% → raise  threshold by 1 pt
+
+        Only applies when a regime has at least 5 recorded trades.
+        Adjustments are clamped: thresholds never go below 65 or above 90.
+
+        Args:
+            base_thresholds: dict of regime → min_score (e.g. from _REGIME_MIN_SCORE)
+
+        Returns:
+            Adjusted thresholds dict (same keys, modified values).
+        """
+        stats    = self.get_regime_overall_stats()
+        adjusted = dict(base_thresholds)
+
+        for regime, data in stats.items():
+            total    = data["total_trades"]
+            win_rate = data["win_rate"]
+
+            if total < 5:
+                continue   # not enough data to be confident
+
+            current = adjusted.get(regime, 72.0)
+
+            if win_rate > 75:
+                delta = -2
+            elif win_rate > 65:
+                delta = -1
+            elif win_rate < 45:
+                delta = +3
+            elif win_rate < 55:
+                delta = +1
+            else:
+                delta = 0
+
+            if delta != 0:
+                new_threshold = max(65.0, min(90.0, current + delta))
+                if new_threshold != current:
+                    logger.info(
+                        "[TimingDB] Regime threshold adapted: %s %.0f → %.0f "
+                        "(win_rate=%.1f%% total=%d)",
+                        regime, current, new_threshold, win_rate, total,
+                    )
+                    adjusted[regime] = new_threshold
+
+        return adjusted
+
+    def get_top_timings(self, n: int = 10) -> list:
+        """
+        Return the top N timing slots by pattern strength × win rate.
+
+        Returns a list of dicts sorted by composite score (descending):
+        [
+            {
+                "key":               "15:05|CALL",
+                "time":              "15:05",
+                "direction":         "CALL",
+                "pattern_strength":  87,
+                "win_rate":          81.0,
+                "total_trades":      14,
+                "composite_score":   70.5,
+                "bullish_consistency": 81.0,
+                "bearish_consistency": 19.0,
+            },
+            ...
+        ]
+        """
+        rows: list[dict] = []
+        for key, rec in self._db.items():
+            total = rec.get("total_trades", 0)
+            if total < 3:
+                continue   # too few trades to trust
+
+            ps  = rec.get("pattern_strength",      50)
+            wr  = rec.get("historical_success_rate", 50.0)
+            t   = rec.get("time",      "")
+            d   = rec.get("direction", "")
+
+            # Composite ranking score: pattern strength × win_rate / 100
+            composite = (ps * wr) / 100.0
+
+            # Bullish / bearish consistency from daily history
+            history   = rec.get("daily_history", [])
+            wins_     = sum(1 for e in history if e["result"] == "WIN")
+            total_h   = len(history)
+            bull_cons = round((wins_ / total_h * 100) if total_h > 0 else 50.0, 1)
+            bear_cons = round(100.0 - bull_cons, 1)
+
+            rows.append({
+                "key":                key,
+                "time":               t,
+                "direction":          d,
+                "pattern_strength":   ps,
+                "win_rate":           wr,
+                "total_trades":       total,
+                "composite_score":    round(composite, 1),
+                "bullish_consistency": bull_cons,
+                "bearish_consistency": bear_cons,
+            })
+
+        rows.sort(key=lambda x: x["composite_score"], reverse=True)
+        return rows[:n]
+
+    def get_timing_full_report(self, time_str: str, direction: str) -> dict:
+        """
+        Return a detailed timing report for Telegram / debugging.
+
+        Extends get_timing_report() with regime breakdown and consistency metrics.
+        """
+        key = self._key(time_str, direction)
+        rec = self._db.get(key, {})
+
+        history   = rec.get("daily_history", [])
+        wins_h    = sum(1 for e in history if e["result"] == "WIN")
+        total_h   = len(history)
+        win_rate  = round((wins_h / total_h * 100) if total_h > 0 else 50.0, 1)
+
+        # Recent 7-day consistency
+        cutoff_7d = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+        recent    = [e for e in history if e["date"] >= cutoff_7d]
+        recent_wr = round((sum(1 for e in recent if e["result"] == "WIN") /
+                           len(recent) * 100) if recent else win_rate, 1)
+
+        # Regime breakdown
+        regime_detail: dict = {}
+        for regime, rd in rec.get("regime_history", {}).items():
+            t_ = rd.get("trades", 0)
+            w_ = rd.get("wins",   0)
+            regime_detail[regime] = {
+                "win_rate":     round((w_ / t_ * 100) if t_ > 0 else 50.0, 1),
+                "total_trades": t_,
+            }
+
+        return {
+            "time":               time_str,
+            "direction":          direction,
+            "pattern_strength":   rec.get("pattern_strength",      50),
+            "win_rate":           win_rate,
+            "recent_7d_win_rate": recent_wr,
+            "total_trades":       total_h,
+            "wins":               wins_h,
+            "losses":             total_h - wins_h,
+            "bullish_consistency": win_rate if direction == "CALL" else 100.0 - win_rate,
+            "bearish_consistency": win_rate if direction == "PUT"  else 100.0 - win_rate,
+            "regime_breakdown":   regime_detail,
+            "last_updated":       rec.get("last_updated", ""),
+        }
+
+    def update_from_backtest(self, timing_win_rates: dict) -> None:
+        """
+        Seed timing_stats.json with historical win rates from the backtesting engine.
+
+        Only updates records that have fewer than 3 trades recorded (i.e., new slots
+        with no live trade history yet).  This gives the signal generator a sensible
+        starting point for pattern strength on unseen timings.
+
+        Args:
+            timing_win_rates: dict["HH:MM|DIR", win_rate_pct] from BacktestResults
+        """
+        updated = 0
+        for key, bt_wr in timing_win_rates.items():
+            try:
+                time_str, direction = key.split("|")
+            except ValueError:
+                continue
+
+            rec = self._get_record(time_str, direction)
+            if rec["total_trades"] < 3:
+                # Seed with backtest win rate (don't overwrite live data)
+                rec["historical_success_rate"] = round(float(bt_wr), 1)
+                rec["pattern_strength"]        = self._compute_pattern_strength(rec)
+                updated += 1
+
+        if updated > 0:
+            self._save()
+            logger.info("[TimingDB] Seeded %d new timing slots from backtest", updated)
+
 
 # ─────────────────────────────────────────────────────────
 # Global singleton — importable by signal_generator.py

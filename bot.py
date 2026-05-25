@@ -335,25 +335,101 @@ def maybe_send_daily_signal_list():
     put_sigs  = [s for s in signals if s.get("direction") == "PUT"]
 
     def _fmt_signal(s: dict, direction: str) -> str:
-        t = s.get("time", "??:??")
+        t    = s.get("time",  "??:??")
         pair = str(s.get("pair", "EURUSD")).replace("/", "")
-        return f"{t} {pair} {direction}"
 
-    lines = []
+        # ── Agreement score ───────────────────────────────────────
+        agr_score = s.get("agreement_score")
+        agr_total = s.get("agreement_total", 8)
+        agr_tier  = s.get("agreement_tier",  "")
+        if agr_score is not None:
+            if agr_tier == "STRONG_SIGNAL":
+                agr_emoji = "🟢"
+            elif agr_tier == "MODERATE_SIGNAL":
+                agr_emoji = "🟡"
+            else:
+                agr_emoji = "⬜"
+            agr_line = f"Agreement: {agr_score}/{agr_total} {agr_emoji} | {agr_tier}"
+        else:
+            agr_line = None
+
+        # ── Core stats ────────────────────────────────────────────
+        prob   = s.get("probability_score", s.get("confidence", ""))
+        pat    = s.get("pattern_strength",  "")
+        wr     = s.get("historical_win_rate_pct",
+                       s.get("historical_success_rate", ""))
+        regime = s.get("market_regime",     "")
+
+        # ── Confidence breakdown ──────────────────────────────────
+        breakdown_items = s.get("confidence_breakdown", [])
+
+        # ── Build card ────────────────────────────────────────────
+        sep   = "━" * 22
+        lines = [
+            sep,
+            f"🕐 {t}  {pair}  {direction}",
+        ]
+
+        if agr_line:
+            lines.append(agr_line)
+        if regime:
+            lines.append(f"Regime: {regime}")
+
+        # Confidence breakdown block
+        if breakdown_items:
+            lines.append("")
+            lines.append("📊 Confidence Breakdown")
+            max_lbl = max(len(lbl) for lbl, _ in breakdown_items)
+            for lbl, pts in breakdown_items:
+                sign = "+" if pts >= 0 else ""
+                pad  = " " * (max_lbl - len(lbl) + 2)
+                lines.append(f"  {lbl}:{pad}{sign}{pts}")
+            lines.append(f"  {'─' * (max_lbl + 6)}")
+            if prob != "":
+                final_score = int(round(float(prob)))
+                lines.append(f"  Final Score:{' ' * max(1, max_lbl - 11 + 2)}{final_score}")
+
+        # Summary stats
+        stats = []
+        if pat != "":  stats.append(f"Pattern: {int(pat)}/100")
+        if wr  != "":  stats.append(f"Win Rate: {round(float(wr), 1)}%")
+        if stats:
+            lines.append("  " + " | ".join(stats))
+
+        return "\n".join(lines)
+
+    # ── Build backtest briefing header ────────────────────────────────────
+    briefing_lines = ["🗓 MORNING BRIEFING — Generated Signals"]
+    try:
+        from backtesting_engine import BacktestingEngine as _BTE
+        bt_data = _BTE().load_last_results()
+        if bt_data:
+            br_wr     = bt_data.get("overall_win_rate",     "?")
+            br_regime = bt_data.get("top_regime",          "?")
+            br_rwr    = bt_data.get("top_regime_win_rate",  "?")
+            briefing_lines.append(
+                f"14-day: wr={br_wr}% | best_regime={br_regime} ({br_rwr}%)"
+            )
+    except Exception:
+        pass
+    briefing_lines.append("")
+
+    lines: list[str] = list(briefing_lines)
 
     if call_sigs:
-        lines.append("📊 TODAY GENERATED CALL SIGNALS")
+        lines.append("📈 CALL SIGNALS")
         for s in sorted(call_sigs, key=lambda x: x.get("time", "")):
+            lines.append("")
             lines.append(_fmt_signal(s, "CALL"))
 
     if put_sigs:
-        if lines:
-            lines.append("")
-        lines.append("📊 TODAY GENERATED PUT SIGNALS")
+        lines.append("")
+        lines.append("📉 PUT SIGNALS")
         for s in sorted(put_sigs, key=lambda x: x.get("time", "")):
+            lines.append("")
             lines.append(_fmt_signal(s, "PUT"))
 
-    if not lines:
+    if not lines or len(lines) <= len(briefing_lines):
         logger.info("No CALL or PUT signals to send today.")
     else:
         logger.info(f"Sending generated daily list to Telegram ({len(signals)} signals)")

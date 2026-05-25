@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 from indicators import add_indicators
-from learning_engine import learning_engine
+from learning_engine import learning_engine, dynamic_weight_optimizer
 from market_safety import run_market_safety
 from market_regime import detect_market_regime, get_regime_behavior, classify_volatility_zone
 from probability_engine import (
@@ -19,6 +19,8 @@ from probability_engine import (
 )
 from persistence import safe_load_json, safe_save_json
 from signal_manager import timing_db
+from agreement_engine import agreement_engine, AGREEMENT_SKIP, AGREEMENT_STRONG, AGREEMENT_MODERATE
+from backtesting_engine import BacktestingEngine
 
 # ── Configuration ─────────────────────────────────────────
 PAIR = "EURUSD"
@@ -1014,6 +1016,27 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 )
                 continue
 
+            # ── Multi-Strategy Agreement Gate ─────────────────────────────────
+            # Evaluate all 8 strategy voters. Gate: 6/8=STRONG, 5/8=MODERATE, <5=SKIP.
+            # This is an ADDITIONAL filter on top of the probability gate — it never
+            # replaces market safety, stale cleanup, martingale, or timezone logic.
+            agreement = agreement_engine.compute(
+                df, direction, metrics, regime, prob_result, live_direction
+            )
+            if agreement.tier == AGREEMENT_SKIP:
+                logger.info(
+                    "[Agreement] SKIP %s %s — score=%d/%d (%s)",
+                    ist_time_str, direction,
+                    agreement.agreement_score, agreement.total_voters, agreement.tier,
+                )
+                continue
+
+            logger.info(
+                "[Agreement] %s %s — score=%d/%d tier=%s",
+                ist_time_str, direction,
+                agreement.agreement_score, agreement.total_voters, agreement.tier,
+            )
+
             # ── Adaptive learning adjustments ────────────────────────
             rsi_avg    = float(slot_data["RSI"].mean()) if "RSI" in slot_data.columns else 50.0
             base_conf  = prob_result.probability_score  # use prob score as base confidence
@@ -1084,6 +1107,11 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 # ── Centralized score (primary authority) ────────
                 "probability_score":              round(prob_result.probability_score, 2),
                 "signal_tier":                    prob_result.signal_tier,
+                # ── Agreement score ───────────────────────────────
+                "agreement_score":                agreement.agreement_score,
+                "agreement_total":                agreement.total_voters,
+                "agreement_tier":                 agreement.tier,
+                "agreement_votes":                agreement.as_dict().get("votes", {}),
                 # ── Published confidence (blended) ───────────────
                 "confidence":                     int(min(99, adjusted_conf)),
                 # ── Pattern strength ─────────────────────────────
@@ -1108,6 +1136,8 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 "trend_continuation_reliability": _metric_float(metrics, "trend_continuation_reliability"),
                 # ── Score breakdown (for analysis / logging) ─────
                 "score_breakdown": prob_result.as_dict(),
+                # ── Confidence breakdown (formatted) ─────────────
+                "confidence_breakdown": prob_result.get_breakdown_items(),
                 # ── Context ──────────────────────────────────────
                 "volatility_zone":                vol_zone,
                 "market_profile":                 market_profile["profile"],
@@ -1187,6 +1217,25 @@ def generate_daily_signals() -> bool:
     if not is_df_cache_fresh():
         logger.warning("Cached market data too old — skipping generation.")
         return False
+
+    # ── Run 14-day backtest before signal selection ─────────────────────────
+    # Backtesting uses the already-fetched df — no extra API calls.
+    # Results are used to:
+    #   1. Update dynamic probability weights
+    #   2. Seed timing_db with historically-grounded pattern strengths
+    try:
+        bt_engine = BacktestingEngine()
+        bt_results = bt_engine.run(df)
+        # Feed results to dynamic weight optimizer
+        dynamic_weight_optimizer.update_from_backtest(bt_results)
+        # Seed timing_db with backtest win rates for unseen slots
+        timing_db.update_from_backtest(bt_results.timing_win_rates)
+        logger.info(
+            "[Backtest] Integrated: overall_wr=%.1f%% top_regime=%s",
+            bt_results.overall_win_rate, bt_results.top_regime,
+        )
+    except Exception as e:
+        logger.warning("[Backtest] Failed (non-critical): %s", e)
 
     signals = calculate_recurring_strength(df)
 

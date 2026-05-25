@@ -162,6 +162,59 @@ class ProbabilityResult:
             "contrib_reversal_penalty":     round(self.contrib_reversal_penalty, 2),
         }
 
+    def get_breakdown_items(self) -> list:
+        """
+        Return a list of (label, signed_points) tuples for display.
+
+        Points are the actual weighted contribution to the final score
+        (before regime multiplier), rounded to nearest integer.
+        Positive = boosts score; negative = reduces score.
+
+        Example output:
+            [("Win Rate History", 26), ("Direction Bias", 18), ...,
+             ("Reversal Risk",  -4)]
+        """
+        items = [
+            ("Win Rate History",   int(round(self.contrib_win_rate))),
+            ("Direction Bias",     int(round(self.contrib_direction_consistency))),
+            ("Momentum Strength",  int(round(self.contrib_momentum))),
+            ("ATR Quality",        int(round(self.contrib_atr_quality))),
+            ("Session Strength",   int(round(self.contrib_session))),
+            ("Volatility Quality", int(round(self.contrib_volatility))),
+            ("Reversal Risk",      -int(round(self.contrib_reversal_penalty))),
+        ]
+        return items
+
+    def format_breakdown(self, final_score: float | None = None) -> str:
+        """
+        Return a Telegram-formatted confidence breakdown block.
+
+        Example:
+            ━━━━━━━━━━━━━━━━━━
+            📊 Confidence Breakdown
+            Win Rate History:   +26
+            Direction Bias:     +18
+            Momentum Strength:  +12
+            ATR Quality:        +8
+            Session Strength:   +6
+            Volatility Quality: +5
+            Reversal Risk:      -4
+            ─────────────────────
+            Final Score:        71
+            ━━━━━━━━━━━━━━━━━━
+        """
+        score = final_score if final_score is not None else self.probability_score
+        items = self.get_breakdown_items()
+        max_label = max(len(lbl) for lbl, _ in items)
+        lines = ["📊 Confidence Breakdown"]
+        for label, pts in items:
+            sign  = "+" if pts >= 0 else ""
+            pad   = " " * (max_label - len(label) + 2)
+            lines.append(f"  {label}:{pad}{sign}{pts}")
+        lines.append(f"  {'─' * (max_label + 6)}")
+        lines.append(f"  Final Score:{' ' * (max_label - 11 + 2)}{int(round(score))}")
+        return "\n".join(lines)
+
 
 def _classify_tier(score: float) -> str:
     if score >= TIER_STRONG_MIN:

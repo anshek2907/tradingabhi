@@ -230,3 +230,217 @@ class LearningEngine:
 
 # Global singleton instance for easy access
 learning_engine = LearningEngine()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Dynamic Weight Optimizer
+# ══════════════════════════════════════════════════════════════════════════════
+
+DYNAMIC_WEIGHTS_FILE = "dynamic_weights.json"
+
+# ── Baseline weights (v2 — must match probability_engine._WEIGHTS exactly) ──
+_BASELINE_WEIGHTS = {
+    "win_rate":              0.32,
+    "direction_consistency": 0.25,
+    "atr_quality":           0.12,
+    "momentum_strength":     0.15,
+    "session_strength":      0.08,
+    "volatility_quality":    0.08,
+    "reversal_risk":         0.06,
+}
+
+# Max drift from baseline: ±30% of each baseline value
+_MAX_DRIFT_FACTOR = 0.30
+
+
+class DynamicWeightOptimizer:
+    """
+    Self-improving scoring weight manager.
+
+    Tracks which probability formula components correlate best with actual wins
+    and makes small bounded adjustments to their weights.  Adjustments are
+    persisted to dynamic_weights.json so they survive restarts.
+
+    Weight bounds:
+        Each weight can shift ±30% from its baseline value.
+        e.g. win_rate baseline 0.32  →  allowed range [0.224, 0.416]
+
+    The adjusted weights are soft overrides — deleting dynamic_weights.json
+    resets to the hardcoded v2 baseline, preventing runaway drift.
+
+    Usage:
+        from learning_engine import dynamic_weight_optimizer
+        weights = dynamic_weight_optimizer.get_weights()
+        # feed into ProbabilityEngine or use directly
+        dynamic_weight_optimizer.update_from_backtest(backtest_results)
+    """
+
+    def __init__(self, weights_file: str = DYNAMIC_WEIGHTS_FILE):
+        self.weights_file = weights_file
+        self._weights     = self._load_weights()
+
+    # ── I/O ───────────────────────────────────────────────────────────────
+
+    def _load_weights(self) -> dict:
+        data = safe_load_json(self.weights_file, default={})
+        stored = data.get("weights", {})
+        if not stored or not isinstance(stored, dict):
+            return dict(_BASELINE_WEIGHTS)
+
+        # Validate and clamp stored weights against baseline bounds
+        weights = {}
+        for key, baseline in _BASELINE_WEIGHTS.items():
+            stored_val = stored.get(key, baseline)
+            lo = baseline * (1 - _MAX_DRIFT_FACTOR)
+            hi = baseline * (1 + _MAX_DRIFT_FACTOR)
+            weights[key] = max(lo, min(hi, float(stored_val)))
+        return weights
+
+    def _save_weights(self, meta: dict | None = None) -> None:
+        from datetime import datetime as _dt
+        payload = {
+            "weights":              {k: round(v, 6) for k, v in self._weights.items()},
+            "baseline_weights":     {k: round(v, 6) for k, v in _BASELINE_WEIGHTS.items()},
+            "last_updated":         _dt.now().strftime("%Y-%m-%d"),
+        }
+        if meta:
+            payload.update(meta)
+        safe_save_json(self.weights_file, payload)
+
+    # ── Public API ─────────────────────────────────────────────────────────
+
+    def get_weights(self) -> dict:
+        """Return current effective probability formula weights."""
+        return dict(self._weights)
+
+    def reset_to_baseline(self) -> None:
+        """Reset all weights to hardcoded v2 baseline."""
+        self._weights = dict(_BASELINE_WEIGHTS)
+        self._save_weights({"note": "Manual reset to baseline"})
+        logger.info("[WeightOpt] Weights reset to v2 baseline")
+
+    def update_from_backtest(self, backtest_results) -> None:
+        """
+        Adjust weights based on backtesting performance metrics.
+
+        Strategy:
+          • High overall win rate (>70%) → slightly boost win_rate weight
+            (historical win rates are proven reliable predictors)
+          • High continuation success (>65%) → boost momentum_strength weight
+          • High reversal failure rate (>52%) → boost reversal_risk penalty weight
+          • Low volatility quality (<50%) → slightly reduce volatility_quality weight
+          • Very low overall win rate (<50%) → broad reset toward baseline
+
+        Each adjustment is capped at ±5% of the current weight value per run.
+        Cumulative drift is bounded at ±30% of baseline (enforced at load time).
+
+        Args:
+            backtest_results: BacktestResults dataclass or dict with keys:
+                              overall_win_rate, continuation_success,
+                              reversal_failure_rate, volatility_quality_score
+        """
+        # Accept both BacktestResults dataclass and plain dict
+        if hasattr(backtest_results, "as_dict"):
+            data = backtest_results.as_dict()
+        elif isinstance(backtest_results, dict):
+            data = backtest_results
+        else:
+            logger.warning("[WeightOpt] Unknown backtest_results type — skipping")
+            return
+
+        overall_wr   = float(data.get("overall_win_rate",      50.0))
+        cont_success = float(data.get("continuation_success",  50.0))
+        rev_fail     = float(data.get("reversal_failure_rate", 50.0))
+        vol_quality  = float(data.get("volatility_quality_score", 50.0))
+        total_sims   = int(  data.get("total_simulated",         0))
+
+        # Need at least 50 simulated trades to trust adjustments
+        if total_sims < 50:
+            logger.info(
+                "[WeightOpt] Too few simulated trades (%d) — skipping weight update",
+                total_sims,
+            )
+            return
+
+        adjustments = {}
+        _STEP = 0.005   # 0.5% nudge per update (small, bounded)
+
+        # ── Rule 1: Win rate quality ───────────────────────────────────
+        if overall_wr > 70:
+            adjustments["win_rate"] = +_STEP          # winning → trust win_rate more
+        elif overall_wr < 50:
+            adjustments["win_rate"] = -_STEP          # losing  → reduce over-reliance
+
+        # ── Rule 2: Continuation quality ──────────────────────────────
+        if cont_success > 65:
+            adjustments["momentum_strength"] = +_STEP
+        elif cont_success < 45:
+            adjustments["momentum_strength"] = -_STEP
+
+        # ── Rule 3: Reversal failure ───────────────────────────────────
+        if rev_fail > 55:
+            adjustments["reversal_risk"] = +_STEP    # reversals hurting → penalize more
+        elif rev_fail < 35:
+            adjustments["reversal_risk"] = -_STEP    # reversals rare → reduce penalty
+
+        # ── Rule 4: Volatility quality ─────────────────────────────────
+        if vol_quality > 70:
+            adjustments["volatility_quality"] = +_STEP
+        elif vol_quality < 45:
+            adjustments["volatility_quality"] = -_STEP
+
+        # ── Apply adjustments (bounded) ────────────────────────────────
+        applied = []
+        for key, delta in adjustments.items():
+            if key not in self._weights:
+                continue
+            baseline = _BASELINE_WEIGHTS[key]
+            lo       = baseline * (1 - _MAX_DRIFT_FACTOR)
+            hi       = baseline * (1 + _MAX_DRIFT_FACTOR)
+            old_val  = self._weights[key]
+            new_val  = max(lo, min(hi, old_val + delta))
+            if abs(new_val - old_val) > 1e-8:
+                self._weights[key] = round(new_val, 6)
+                applied.append(f"{key}: {old_val:.4f}→{new_val:.4f}")
+
+        if applied:
+            self._save_weights({
+                "last_backtest_wr":         round(overall_wr, 2),
+                "last_backtest_cont":       round(cont_success, 2),
+                "last_backtest_rev_fail":   round(rev_fail, 2),
+                "last_backtest_vol":        round(vol_quality, 2),
+                "adjustments_applied":      len(applied),
+            })
+            logger.info(
+                "[WeightOpt] Weights updated from backtest (wr=%.1f%% cont=%.1f%% "
+                "rev=%.1f%% vol=%.1f): %s",
+                overall_wr, cont_success, rev_fail, vol_quality,
+                " | ".join(applied),
+            )
+        else:
+            logger.debug("[WeightOpt] No weight adjustments needed from backtest")
+
+    def format_weights_report(self) -> str:
+        """Format current weights vs baseline for logging / Telegram."""
+        lines = ["⚖️ Dynamic Probability Weights"]
+        for key, val in self._weights.items():
+            base  = _BASELINE_WEIGHTS.get(key, val)
+            drift = val - base
+            sign  = "+" if drift >= 0 else ""
+            label = key.replace("_", " ").title()
+            lines.append(f"  {label}: {val:.4f} (base {base:.4f} {sign}{drift:.4f})")
+        return "\n".join(lines)
+
+
+# ── Global singleton ───────────────────────────────────────────────────────
+dynamic_weight_optimizer = DynamicWeightOptimizer()
+
+
+def get_dynamic_weights() -> dict:
+    """
+    Convenience function — returns the current effective probability formula
+    weights from the DynamicWeightOptimizer.
+
+    If dynamic_weights.json is missing or empty, returns the v2 baseline.
+    """
+    return dynamic_weight_optimizer.get_weights()
