@@ -15,6 +15,7 @@ from probability_engine import (
     TIER_STRONG,
     TIER_MODERATE,
     TIER_SKIP,
+    _regime_min_score,
 )
 from persistence import safe_load_json, safe_save_json
 from signal_manager import timing_db
@@ -40,12 +41,13 @@ MIN_RECURRING_SIGNAL_GAP_MINUTES = 10
 UNSTABLE_SIGNAL_GAP_MINUTES = 20
 
 # ── Probability scoring (centralized via probability_engine.py) ───────
-# Formula:
-#   score = win_rate*0.30 + direction_consistency*0.25 + atr_quality*0.15
-#         + momentum_strength*0.10 + session_strength*0.10
-#         + volatility_quality*0.10 - reversal_risk*0.10
+# Formula (v2 — balanced safe-profit):
+#   score = win_rate*0.32 + direction_consistency*0.25 + momentum_strength*0.15
+#         + atr_quality*0.12 + session_strength*0.08
+#         + volatility_quality*0.08 - reversal_risk*0.06
 #         × regime_multiplier
 #
+# Dynamic min score: TRENDING=70 | SIDEWAYS=78 | HIGH_VOL/REVERSAL=80
 # Tiers: STRONG_SIGNAL >= 80 | MODERATE_SIGNAL >= 70 | SKIP < 70
 #
 # All routing via probability_engine.compute(ProbabilityInputs(...))
@@ -331,21 +333,37 @@ def _analyse_slot(slot_data: pd.DataFrame, atr_mean: float, direction: str) -> d
     # (will be applied in caller after UTC→IST conversion)
     session_strength = 100.0  # placeholder; refined by caller
 
-    # Composite score with weights
+    # ── Composite score with rebalanced weights (v2 — balanced safe-profit) ──
+    # Priorities:
+    #   win_rate: 0.35         ↑ historical track record is the primary signal
+    #   ema_align: 0.15        ↑ trend alignment (direction consistency proxy)
+    #   mom_cont: 0.15         ↑ momentum continuation priority
+    #   reversal_score: 0.10   → less aggressive reversal penalty vs v1
+    #   rsi_cont: 0.10         unchanged — RSI momentum quality
+    #   atr_stability: 0.08    ↓ reduced ATR strictness
+    #   candle_strength: 0.07  ↓ less weight on body quality alone
     composite = (
-        wr            * 0.30 +   # historical direction success
-        ema_align     * 0.15 +   # EMA trend alignment
-        rsi_cont      * 0.10 +   # RSI momentum continuation
-        atr_stability * 0.10 +   # ATR stability / activity
-        mom_cont      * 0.10 +   # candle momentum continuation
-        reversal_score* 0.10 +   # low reversal probability
-        candle_strength*0.10 +   # candle body strength
-        session_strength*0.05    # session weighting (5% placeholder)
+        wr              * 0.35 +   # historical direction success (primary)
+        ema_align       * 0.15 +   # EMA trend alignment (direction bias)
+        mom_cont        * 0.15 +   # candle momentum continuation (priority)
+        rsi_cont        * 0.10 +   # RSI momentum continuation
+        reversal_score  * 0.10 +   # low reversal probability (less aggressive)
+        atr_stability   * 0.08 +   # ATR stability / activity
+        candle_strength * 0.07     # candle body strength
     )
 
-    # Penalize weak/noisy timings directly in composite
-    if wr < 60.0:
-        composite -= 15.0  # heavy penalty for weak historical success
+    # ── Recurring timing stability bonus ───────────────────────
+    # Reward timings with very strong win rates and stable direction
+    # (these are the historically repeating profitable timings we want to prioritize)
+    if wr >= 70.0 and reversal_freq <= 30.0:
+        composite += 5.0   # strong recurring profitable timing bonus
+    elif wr >= 65.0 and reversal_freq <= 35.0:
+        composite += 3.0   # moderate recurring timing bonus
+
+    # ── Penalize weak/noisy timings (v2 — softened) ────────────
+    # Threshold raised from 60.0 to 58.0 to avoid penalizing borderline valid slots
+    if wr < 58.0:
+        composite -= 10.0  # was 15.0 — reduced penalty
 
     return {
         "direction": direction,
@@ -796,7 +814,7 @@ def _live_confirmation_ok(
         if not (ema50 < ema200 and rsi_now < 50 and rsi_now <= rsi_prev):
             return False, "live EMA/RSI not bearish", adjusted_confidence
 
-    return adjusted_confidence >= 68, "live confirmation passed", adjusted_confidence
+    return adjusted_confidence >= 65, "live confirmation passed", adjusted_confidence
 
 
 def _minutes_from_time(time_str: str) -> int:
@@ -892,6 +910,8 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
 
     # Regime-adaptive parameters
     total_target  = behavior["target"]
+    target_min    = behavior.get("target_min", max(2, total_target - 3))
+    target_max    = behavior.get("target_max", total_target + 3)
     threshold     = max(BASE_CONFIDENCE_THRESHOLD, behavior["threshold"])
     min_pat_str   = behavior["min_pattern_str"]
     rev_prob_max  = behavior["reversal_prob_max"]
@@ -899,7 +919,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
     atr_ratio_max = behavior["atr_ratio_max"]
 
     logger.info(
-        f"[Regime] Using regime={regime} | target={total_target} | "
+        f"[Regime] Using regime={regime} | target={total_target} (range {target_min}–{target_max}) | "
         f"threshold={threshold} | min_pat_str={min_pat_str} | "
         f"rev_prob_max={rev_prob_max}"
     )
@@ -969,12 +989,17 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
             )
             prob_result = probability_engine.compute(prob_inputs)
 
-            # ── Tier gate: SKIP → discard immediately ─────────────────
-            if not probability_engine.is_acceptable(prob_result):
+            # ── Tier gate: use regime-aware acceptability (dynamic min score) ─────
+            # is_acceptable_for_regime() applies the regime-specific floor:
+            #   TRENDING=70, SIDEWAYS=78, HIGH_VOL/REVERSAL=80
+            # This allows quality signals through in trending markets without
+            # forcing weak trades in sideways/volatile conditions.
+            if not probability_engine.is_acceptable_for_regime(prob_result, regime):
                 logger.debug(
-                    "[Score] SKIP %s %s — prob_score=%.1f tier=%s",
+                    "[Score] SKIP %s %s — prob_score=%.1f tier=%s regime_floor=%.0f",
                     ist_time_str, direction,
                     prob_result.probability_score, prob_result.signal_tier,
+                    _regime_min_score(regime),
                 )
                 continue
 
@@ -1093,8 +1118,23 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 "source":                         "generated",
             })
 
-    # ── Rank and select ───────────────────────────────────
+    # ── Rank and select (adaptive count within target_min–target_max) ───
     final = _select_ranked_with_cooldown(candidates, total_target=total_target)
+
+    # ── Adaptive count adjustment ─────────────────────────────────
+    # If we have enough strong candidates, allow up to target_max.
+    # If we have fewer candidates than target_min, that's ok — quality over quantity.
+    strong_count = sum(1 for s in candidates if s.get("signal_tier") == TIER_STRONG)
+    if strong_count >= target_max and len(final) < target_max:
+        extra = _select_ranked_with_cooldown(candidates, total_target=target_max)
+        # Only extend to target_max if we have genuinely strong signals to fill it
+        if len(extra) > len(final):
+            final = extra
+            logger.info(
+                f"[Adaptive] Extended to target_max={target_max} — "
+                f"{strong_count} STRONG candidates available"
+            )
+
     final.sort(key=lambda x: x["time"])
 
     # Log final selected set
