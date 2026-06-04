@@ -141,6 +141,7 @@ class ProbabilityInputs:
     volatility_zone:    str   = "healthy"
     time_str:           str   = ""
     direction:          str   = ""
+    market_structure:   Optional[any] = None  # MarketStructureResult
 
 
 @dataclass
@@ -404,6 +405,24 @@ class ProbabilityEngine:
             # Penalise only extreme reversal risk (relaxed from >35 to >42)
             if inputs.reversal_risk > 42.0:
                 regime_mult = max(0.82, regime_mult - 0.03)  # was -0.05
+
+        # ── Step 4: Market Structure & Liquidity Modifiers ──
+        if inputs.market_structure is not None:
+            ms = inputs.market_structure
+            # Reduce confidence near strong opposing liquidity
+            if ms.near_opposing_liquidity:
+                regime_mult = max(0.80, regime_mult - 0.05)
+            # Boost continuation after BOS
+            if inputs.direction == ms.recent_bos:
+                regime_mult = min(1.15, regime_mult + 0.05)
+            # Boost reversal after CHOCH
+            if inputs.direction == ms.recent_choch:
+                regime_mult = min(1.15, regime_mult + 0.05)
+            # Increase confidence when trend, structure, and liquidity agree
+            if inputs.direction == "CALL" and ms.trend == "BULLISH" and not ms.near_opposing_liquidity:
+                regime_mult = min(1.15, regime_mult + 0.03)
+            elif inputs.direction == "PUT" and ms.trend == "BEARISH" and not ms.near_opposing_liquidity:
+                regime_mult = min(1.15, regime_mult + 0.03)
 
         final_score = raw_pre_regime * regime_mult
         final_score = max(0.0, min(100.0, final_score))

@@ -1,12 +1,12 @@
 """
 agreement_engine.py
 ───────────────────
-Multi-Strategy Agreement Engine (9-voter system).
+Multi-Strategy Agreement Engine (10-voter system).
 
-Collects directional votes from 9 independent strategy sources and returns
+Collects directional votes from 10 independent strategy sources and returns
 an AgreementResult describing how strongly all strategies agree.
 
-9 Strategy Voters:
+10 Strategy Voters:
   1. EMA_Trend              – EMA50 vs EMA200 directional cross
   2. RSI_Momentum           – RSI direction + momentum trend
   3. Pattern_Engine         – Recurring historical win-rate for this slot+direction
@@ -16,11 +16,12 @@ an AgreementResult describing how strongly all strategies agree.
   7. Live_Confirmation      – EMA + RSI + ATR live gate (same as confirmation engine)
   8. Momentum_Continuation  – Candle momentum continuation score
   9. Sequence_Pattern       – Multi-candle sequence pattern engine (6 pattern types)
+  10. Market_Structure      – Structural trend, recent BOS/CHOCH and liquidity zones
 
-Agreement Tiers (9-voter system):
-  7/9+ votes matching direction → STRONG_SIGNAL
-  5/9-6/9 votes matching direction → MODERATE_SIGNAL
-  <5/9                          → SKIP
+Agreement Tiers (10-voter system):
+  8/10+ votes matching direction → STRONG_SIGNAL
+  6/10-7/10 votes matching direction → MODERATE_SIGNAL
+  <6/10                          → SKIP
 
 Usage:
     from agreement_engine import agreement_engine, AgreementResult, AGREEMENT_SKIP
@@ -49,6 +50,7 @@ VOTER_VOLATILITY        = "Volatility_Clustering"
 VOTER_LIVE_CONFIRMATION = "Live_Confirmation"
 VOTER_MOMENTUM_CONT     = "Momentum_Continuation"
 VOTER_SEQUENCE_PATTERN  = "Sequence_Pattern"
+VOTER_MARKET_STRUCTURE  = "Market_Structure"
 
 ALL_VOTERS = [
     VOTER_EMA_TREND,
@@ -60,17 +62,18 @@ ALL_VOTERS = [
     VOTER_LIVE_CONFIRMATION,
     VOTER_MOMENTUM_CONT,
     VOTER_SEQUENCE_PATTERN,
+    VOTER_MARKET_STRUCTURE,
 ]
 
-TOTAL_VOTERS = len(ALL_VOTERS)  # 9
+TOTAL_VOTERS = len(ALL_VOTERS)  # 10
 
 # ── Agreement tiers ────────────────────────────────────────────────────────
 AGREEMENT_STRONG   = "STRONG_SIGNAL"
 AGREEMENT_MODERATE = "MODERATE_SIGNAL"
 AGREEMENT_SKIP     = "SKIP"
 
-STRONG_THRESHOLD   = 7  # 7/9+ → STRONG
-MODERATE_THRESHOLD = 5  # 5/9-6/9 → MODERATE
+STRONG_THRESHOLD   = 8  # 8/10+ → STRONG
+MODERATE_THRESHOLD = 6  # 6/10-7/10 → MODERATE
 
 # ── Vote values ────────────────────────────────────────────────────────────
 VOTE_CALL    = "CALL"
@@ -166,6 +169,7 @@ class AgreementEngine:
         regime: str,
         prob_result,                    # ProbabilityResult (from probability_engine)
         live_direction: Optional[str] = None,
+        market_structure: Optional[any] = None,
     ) -> AgreementResult:
         """
         Compute multi-strategy agreement for a single candidate signal.
@@ -351,6 +355,21 @@ class AgreementEngine:
         except Exception:
             votes[VOTER_SEQUENCE_PATTERN] = VOTE_NEUTRAL
 
+        # ── Voter 10: Market Structure ─────────────────────────────────────
+        # Bullish structure votes CALL if not near opposing liquidity. Bearish votes PUT.
+        try:
+            if market_structure is not None:
+                if market_structure.trend == "BULLISH" and not market_structure.near_opposing_liquidity:
+                    votes[VOTER_MARKET_STRUCTURE] = VOTE_CALL
+                elif market_structure.trend == "BEARISH" and not market_structure.near_opposing_liquidity:
+                    votes[VOTER_MARKET_STRUCTURE] = VOTE_PUT
+                else:
+                    votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
+            else:
+                votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
+        except Exception:
+            votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
+
         # ── Tally votes ────────────────────────────────────────────────────
         bullish_votes = sum(1 for v in votes.values() if v == VOTE_CALL)
         bearish_votes = sum(1 for v in votes.values() if v == VOTE_PUT)
@@ -401,6 +420,7 @@ class AgreementEngine:
             votes.get(VOTER_LIVE_CONFIRMATION,  "?"),
             votes.get(VOTER_MOMENTUM_CONT,      "?"),
             votes.get(VOTER_SEQUENCE_PATTERN,   "?"),
+            votes.get(VOTER_MARKET_STRUCTURE,   "?"),
         )
 
         return result

@@ -11,6 +11,7 @@ from agreement_engine import agreement_engine, AGREEMENT_SKIP
 from sequence_engine import sequence_engine, get_sequence_momentum_bonus
 from session_intelligence import session_intel, _session_strength
 from signal_generator import _analyse_probability_slot
+from market_structure import market_structure_engine
 
 # ==============================================================================
 # SWING SIGNAL GENERATOR (15m - 1H trades)
@@ -110,8 +111,17 @@ def generate_swing_signals(
         logger.debug(f"Swing Engine: Rejecting due to weak/unstable volatility ({vol_zone}).")
         return signals
         
-    # ── 5. Sequence & Probability Engine ──
-    seq_result = sequence_engine.analyse(df_15m, direction_hint=direction)
+    # 4.5 Market Structure & Liquidity
+    market_structure = market_structure_engine.analyse(df_1h)
+    if direction == "CALL" and market_structure.trend == "BEARISH" and market_structure.recent_choch == "PUT":
+        logger.debug(f"Swing Engine: Rejecting due to bearish 1H structure CHOCH.")
+        return signals
+    if direction == "PUT" and market_structure.trend == "BULLISH" and market_structure.recent_choch == "CALL":
+        logger.debug(f"Swing Engine: Rejecting due to bullish 1H structure CHOCH.")
+        return signals
+
+    # 5. Sequence & Probability Engine
+    seq_result = sequence_engine.analyse(df_15m, direction_hint=direction, market_structure=market_structure)
     seq_bonus = get_sequence_momentum_bonus(seq_result, direction)
     metrics["momentum_strength"] = max(0.0, min(100.0, metrics["momentum_strength"] + seq_bonus * 0.5))
     
@@ -128,6 +138,7 @@ def generate_swing_signals(
         volatility_zone       = vol_zone,
         time_str              = time_str,
         direction             = direction,
+        market_structure      = market_structure,
     )
     prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
     
@@ -135,11 +146,11 @@ def generate_swing_signals(
         logger.debug(f"Swing Engine: Probability {prob_result.probability_score:.1f} < 75.")
         return signals
         
-    # ── 6. Agreement Engine (Requires >= 7/9) ──
-    agreement = agreement_engine.compute(df_15m, direction, metrics, regime, prob_result)
+    # 6. Agreement Engine (Requires >= 8/10)
+    agreement = agreement_engine.compute(df_15m, direction, metrics, regime, prob_result, market_structure=market_structure)
     
-    if agreement.agreement_score < 7:
-        logger.debug(f"Swing Engine: Agreement {agreement.agreement_score}/{agreement.total_voters} < 7/9.")
+    if agreement.agreement_score < 8:
+        logger.debug(f"Swing Engine: Agreement {agreement.agreement_score}/{agreement.total_voters} < 8/10.")
         return signals
         
     # ── 7. Calculate Entry, Stop Loss, Targets using 1H ATR ──

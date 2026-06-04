@@ -219,6 +219,7 @@ class SequenceEngine:
         self,
         df: pd.DataFrame,
         direction_hint: Optional[str] = None,
+        market_structure: Optional[any] = None,
     ) -> SequenceResult:
         """
         Analyse recent candles for sequence patterns.
@@ -299,7 +300,15 @@ class SequenceEngine:
         # Clamp to 0-100 after scaling.
         raw_max = sum(_PATTERN_WEIGHTS.values()) * 100.0  # theoretical max
         sequence_confidence = min(100.0, max(0.0, (dominant_score / max(raw_max, 1.0)) * 100.0 * 3.5))
-        sequence_confidence = round(sequence_confidence, 2)
+
+        # ── Market Structure Integration ──────────────────────────────
+        if market_structure is not None:
+            if seq_direction == SEQ_CALL and market_structure.trend == "BULLISH":
+                sequence_confidence += 10.0
+            elif seq_direction == SEQ_PUT and market_structure.trend == "BEARISH":
+                sequence_confidence += 10.0
+
+        sequence_confidence = round(min(100.0, sequence_confidence), 2)
 
         # ── Continuation probability (0-100) ─────────────────────────
         # Blend: base 50 + directional edge from confidence, capped conservatively.

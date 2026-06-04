@@ -974,6 +974,10 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
     today_ist      = pd.Timestamp.now(tz="Asia/Kolkata").strftime("%Y-%m-%d")
     live_direction, _ = decide_direction_live(df)
 
+    # ── Step 1.5: Market Structure ───────────────────────
+    from market_structure import market_structure_engine
+    market_structure = market_structure_engine.analyse(df)
+
     # ATR median for volatility zone classification
     atr_market_median = float(
         pd.to_numeric(df14["ATR"], errors="coerce").tail(96).median() or 0.0001
@@ -1039,7 +1043,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 continue
 
             # ── Sequence Pattern Analysis ──────────────────────────────
-            seq_result = sequence_engine.analyse(df, direction_hint=direction)
+            seq_result = sequence_engine.analyse(df, direction_hint=direction, market_structure=market_structure)
             metrics["_sequence_result"] = seq_result
 
             # Sequence momentum bonus: +-0 to +-20 based on pattern match/conflict
@@ -1064,6 +1068,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 volatility_zone       = vol_zone,
                 time_str              = ist_time_str,
                 direction             = direction,
+                market_structure      = market_structure,
             )
             # Use dynamic voter weights (auto-fetches from strategy_weight_tracker)
             prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
@@ -1100,7 +1105,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
             # This is an ADDITIONAL filter on top of the probability gate — it never
             # replaces market safety, stale cleanup, martingale, or timezone logic.
             agreement = agreement_engine.compute(
-                df, direction, metrics, regime, prob_result, live_direction
+                df, direction, metrics, regime, prob_result, live_direction, market_structure=market_structure
             )
             if agreement.tier == AGREEMENT_SKIP:
                 logger.info(
