@@ -21,6 +21,9 @@ from persistence import safe_load_json, safe_save_json
 from signal_manager import timing_db
 from agreement_engine import agreement_engine, AGREEMENT_SKIP, AGREEMENT_STRONG, AGREEMENT_MODERATE
 from backtesting_engine import BacktestingEngine
+from sequence_engine import sequence_engine, get_sequence_momentum_bonus
+from strategy_weight_tracker import strategy_weight_tracker
+from session_intelligence import session_intel, detect_session, SESSION_OVERLAP, SESSION_LONDON, SESSION_NEW_YORK, SESSION_ASIAN
 
 # ── Configuration ─────────────────────────────────────────
 PAIR = "EURUSD"
@@ -504,7 +507,17 @@ def _calculate_recurring_strength_legacy(df: pd.DataFrame) -> list[dict]:
             f"Historical Success={s['historical_success_rate']}%"
         )
 
+
+    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
+    logger.info(f"Generated candidates: {generated_candidates_count}")
+    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
+    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
+    for r in rejected_signals_list:
+        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
+    logger.info(f"Final signal count: {len(final)}\n")
+
     return final
+
 
 
 def _select_balanced(
@@ -581,7 +594,17 @@ def _select_balanced(
                     f"→ {minority} conf={extra['confidence']}% @ {extra['time']}"
                 )
 
+
+    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
+    logger.info(f"Generated candidates: {generated_candidates_count}")
+    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
+    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
+    for r in rejected_signals_list:
+        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
+    logger.info(f"Final signal count: {len(final)}\n")
+
     return final
+
 
 
 # ── State helpers ─────────────────────────────────────────
@@ -600,12 +623,21 @@ def _score_in_range(value: float, low: float, high: float, ideal_low: float, ide
     return ((high - value) / max(high - ideal_high, 0.000001)) * 100
 
 
-def _session_strength(minutes_ist: int) -> float:
-    if 13 * 60 + 30 <= minutes_ist <= 21 * 60 + 30:
-        return 100.0
-    if 13 * 60 <= minutes_ist <= 22 * 60:
-        return 78.0
-    return 35.0
+def _session_strength(minutes_ist: int, direction: str = "CALL", df=None) -> float:
+    """
+    Compute adaptive session strength using the SessionIntelligence engine.
+
+    Replaces the old 3-tier static lookup (100/78/35) with a fully adaptive
+    score driven by:
+      - Session structural liquidity (Asian/London/Overlap/NY)
+      - Rolling win rate for this session × direction
+      - Historical volatility quality in this session
+      - Historical continuation strength in this session
+
+    Returns a value in [20, 100].
+    """
+    strength, _ = session_intel.compute_session_strength(minutes_ist, direction, df)
+    return strength
 
 
 def _analyse_probability_slot(
@@ -877,7 +909,17 @@ def _select_ranked_with_cooldown(candidates: list[dict], total_target: int) -> l
     if len(final) < 3:
         logger.warning(f"Only {len(final)} generated timings passed quality filters today.")
 
+
+    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
+    logger.info(f"Generated candidates: {generated_candidates_count}")
+    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
+    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
+    for r in rejected_signals_list:
+        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
+    logger.info(f"Final signal count: {len(final)}\n")
+
     return final
+
 
 
 def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
@@ -920,9 +962,12 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
     atr_ratio_min = behavior["atr_ratio_min"]
     atr_ratio_max = behavior["atr_ratio_max"]
 
+    from probability_engine import TIER_MODERATE_MIN
+    fallback_threshold = TIER_MODERATE_MIN
+
     logger.info(
         f"[Regime] Using regime={regime} | target={total_target} (range {target_min}–{target_max}) | "
-        f"threshold={threshold} | min_pat_str={min_pat_str} | "
+        f"threshold={threshold} (fallback={fallback_threshold}) | min_pat_str={min_pat_str} | "
         f"rev_prob_max={rev_prob_max}"
     )
 
@@ -935,6 +980,9 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
     )
 
     candidates: list[dict] = []
+    generated_candidates_count = 0
+    accepted_signals_list = []
+    rejected_signals_list = []
     regime_confidence = market_profile["score"]  # 0-100 regime detection confidence
 
     for ist_time_str in unique_times:
@@ -951,10 +999,24 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
         if not (13 * 60 <= ist_minutes <= 22 * 60):
             continue
 
-        session_str = _session_strength(ist_minutes)
+        session_str = _session_strength(ist_minutes)   # kept for legacy callers
 
+
+        # ── Session Intelligence (adaptive, direction-aware) ─────────────────
+        # compute_session_strength() returns an adaptive score based on:
+        #   a) session structural liquidity (Asian/London/Overlap/NY)
+        #   b) rolling win rate for this session × direction
+        #   c) historical volatility quality in this session
+        #   d) historical continuation strength
+        # The second return value (detail dict) is stored on the signal
+        # for downstream display and recording.
         for direction in ("CALL", "PUT"):
+            generated_candidates_count += 1
+            session_str, session_detail = session_intel.compute_session_strength(
+                ist_minutes, direction, df
+            )
             metrics  = _analyse_probability_slot(slot_data, df14, direction, session_str)
+            metrics["_session_detail"] = session_detail   # stash for signal dict
             vol_zone = metrics["volatility_zone"]
 
             # ── Pre-score hard gates (fast rejection before scoring) ──
@@ -963,6 +1025,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 logger.debug(
                     "[Slot] Skip %s %s — vol_zone=%s", ist_time_str, direction, vol_zone
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"vol_zone={vol_zone}"))
                 continue
 
             # 2. ATR ratio vs regime bounds
@@ -972,9 +1035,22 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                     "[Slot] Skip %s %s — atr_ratio=%.2f out of bounds [%.2f,%.2f]",
                     ist_time_str, direction, slot_atr_ratio, atr_ratio_min, atr_ratio_max,
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"atr_ratio={slot_atr_ratio:.2f} out of bounds [{atr_ratio_min:.2f},{atr_ratio_max:.2f}]"))
                 continue
 
-            # ── Centralized probability scoring ──────────────────────
+            # ── Sequence Pattern Analysis ──────────────────────────────
+            seq_result = sequence_engine.analyse(df, direction_hint=direction)
+            metrics["_sequence_result"] = seq_result
+
+            # Sequence momentum bonus: +-0 to +-20 based on pattern match/conflict
+            seq_bonus = get_sequence_momentum_bonus(seq_result, direction)
+            # Apply bonus to the momentum_strength metric (clamped to 0-100)
+            # before passing to probability engine so the formula benefits.
+            metrics["momentum_strength"] = round(
+                max(0.0, min(100.0, metrics["momentum_strength"] + seq_bonus * 0.5)), 1
+            )
+
+            # ── Centralized probability scoring (with dynamic voter weights) ────
             prob_inputs = ProbabilityInputs(
                 win_rate              = metrics["win_rate"],
                 direction_consistency = metrics["direction_consistency"],
@@ -989,7 +1065,8 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 time_str              = ist_time_str,
                 direction             = direction,
             )
-            prob_result = probability_engine.compute(prob_inputs)
+            # Use dynamic voter weights (auto-fetches from strategy_weight_tracker)
+            prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
 
             # ── Tier gate: use regime-aware acceptability (dynamic min score) ─────
             # is_acceptable_for_regime() applies the regime-specific floor:
@@ -1003,6 +1080,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                     prob_result.probability_score, prob_result.signal_tier,
                     _regime_min_score(regime),
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"prob_score={prob_result.probability_score:.1f} < regime_floor={_regime_min_score(regime):.0f}"))
                 continue
 
             # ── REVERSAL_HEAVY extra gate ─────────────────────────────
@@ -1014,6 +1092,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                     ist_time_str, direction,
                     prob_result.probability_score, prob_result.signal_tier,
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"reversal-heavy requires STRONG (score={prob_result.probability_score:.1f})"))
                 continue
 
             # ── Multi-Strategy Agreement Gate ─────────────────────────────────
@@ -1029,6 +1108,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                     ist_time_str, direction,
                     agreement.agreement_score, agreement.total_voters, agreement.tier,
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"agreement={agreement.agreement_score}/{agreement.total_voters} ({agreement.tier})"))
                 continue
 
             logger.info(
@@ -1052,6 +1132,7 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                     "[Learn] Veto %s %s — learning adj=%d",
                     ist_time_str, direction, adj_legacy,
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"learning veto (adj={adj_legacy})"))
                 continue
 
             # Blend learning and timing-db adjustments into confidence
@@ -1064,11 +1145,12 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 base_conf + adj_legacy + adj_timing,
             )
 
-            if learned_strength < PATTERN_STRENGTH_THRESHOLD and blended_conf < threshold:
+            if learned_strength < PATTERN_STRENGTH_THRESHOLD and blended_conf < fallback_threshold:
                 logger.debug(
-                    "[DB] Skip %s %s — learned_str=%d blended_conf=%.1f < threshold=%d",
-                    ist_time_str, direction, learned_strength, blended_conf, threshold,
+                    "[DB] Skip %s %s — learned_str=%d blended_conf=%.1f < fallback_threshold=%.1f",
+                    ist_time_str, direction, learned_strength, blended_conf, fallback_threshold,
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"DB strength={learned_strength} & blended_conf={blended_conf:.1f} < {fallback_threshold:.1f}"))
                 continue
 
             # ── Live confirmation gate ────────────────────────────────
@@ -1079,9 +1161,11 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 logger.info(
                     "[Pattern] Reject %s %s: %s", ist_time_str, direction, live_reason
                 )
+                rejected_signals_list.append((ist_time_str, direction, f"live confirmation failed: {live_reason}"))
                 continue
 
-            if adjusted_conf < threshold:
+            if adjusted_conf < fallback_threshold:
+                rejected_signals_list.append((ist_time_str, direction, f"adjusted_conf={adjusted_conf:.1f} < {fallback_threshold:.1f}"))
                 continue
 
             # ── Final pattern strength (blended) ─────────────────────
@@ -1100,6 +1184,8 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 metrics["win_rate"], metrics["reversal_risk"], vol_zone,
             )
 
+            accepted_signals_list.append((ist_time_str, direction))
+
             candidates.append({
                 "time":                           ist_time_str,
                 "pair":                           PAIR,
@@ -1112,6 +1198,20 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 "agreement_total":                agreement.total_voters,
                 "agreement_tier":                 agreement.tier,
                 "agreement_votes":                agreement.as_dict().get("votes", {}),
+                # ── Sequence pattern ──────────────────────────
+                "sequence_direction":             seq_result.sequence_direction,
+                "sequence_confidence":            round(seq_result.sequence_confidence, 2),
+                "sequence_continuation_prob":     round(seq_result.continuation_prob, 2),
+                "sequence_patterns":              seq_result.patterns_detected,
+                "sequence_bonus_applied":         round(seq_bonus, 2),
+                # ── Session Intelligence ──────────────────────────────────────
+                "session_name":                   session_detail.get("session", detect_session(ist_minutes)),
+                "session_strength":               _metric_float(metrics, "session_strength"),
+                "session_is_overlap":             session_detail.get("is_overlap", False),
+                "session_adaptive_win_rate":      session_detail.get("adaptive_win_rate", 50.0),
+                "session_vol_quality":            session_detail.get("vol_bonus", 70.0),
+                "session_continuation":           session_detail.get("continuation_bonus", 60.0),
+                "session_sample_size":            session_detail.get("sample_size_all", 0),
                 # ── Published confidence (blended) ───────────────
                 "confidence":                     int(min(99, adjusted_conf)),
                 # ── Pattern strength ─────────────────────────────
@@ -1182,7 +1282,17 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
             signal.get("volatility_zone", "?"),
         )
 
+
+    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
+    logger.info(f"Generated candidates: {generated_candidates_count}")
+    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
+    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
+    for r in rejected_signals_list:
+        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
+    logger.info(f"Final signal count: {len(final)}\n")
+
     return final
+
 
 
 def _today_ist_str() -> str:
@@ -1221,8 +1331,9 @@ def generate_daily_signals() -> bool:
     # ── Run 14-day backtest before signal selection ─────────────────────────
     # Backtesting uses the already-fetched df — no extra API calls.
     # Results are used to:
-    #   1. Update dynamic probability weights
-    #   2. Seed timing_db with historically-grounded pattern strengths
+    #   1. Update dynamic probability weights (backtest performance)
+    #   2. Update dynamic voter weights (rolling win-rate per voter)
+    #   3. Seed timing_db with historically-grounded pattern strengths
     try:
         bt_engine = BacktestingEngine()
         bt_results = bt_engine.run(df)
@@ -1230,6 +1341,17 @@ def generate_daily_signals() -> bool:
         dynamic_weight_optimizer.update_from_backtest(bt_results)
         # Seed timing_db with backtest win rates for unseen slots
         timing_db.update_from_backtest(bt_results.timing_win_rates)
+        # ── Daily voter weight update ────────────────────────────────────────
+        # Recompute per-voter multipliers from their rolling prediction records.
+        # These multipliers scale formula weights in compute_with_voter_weights().
+        try:
+            new_voter_weights = strategy_weight_tracker.run_daily_update()
+            logger.info(
+                "[StrategyWeights] Voter multipliers updated: %s",
+                " ".join(f"{k[:8]}={v:.2f}" for k, v in new_voter_weights.items()),
+            )
+        except Exception as we:
+            logger.warning("[StrategyWeights] Daily update failed (non-critical): %s", we)
         logger.info(
             "[Backtest] Integrated: overall_wr=%.1f%% top_regime=%s",
             bt_results.overall_win_rate, bt_results.top_regime,

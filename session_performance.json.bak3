@@ -1,0 +1,321 @@
+{
+  "Asian": {
+    "history": [],
+    "summary": {
+      "session": "Asian",
+      "win_rate_call": 50.0,
+      "win_rate_put": 50.0,
+      "win_rate_overall": 50.0,
+      "avg_vol_quality": 70.0,
+      "avg_continuation": 60.0,
+      "sample_call": 0,
+      "sample_put": 0,
+      "total_trades": 0
+    }
+  },
+  "London": {
+    "history": [
+      {
+        "timestamp": "2026-06-04T18:56:00.560185",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.566917",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.575649",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.586917",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.596129",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.606662",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.614976",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.625640",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.636053",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.646925",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.656501",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.667566",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.677210",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.687800",
+        "session": "London",
+        "direction": "CALL",
+        "result": "WIN",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "14:00"
+      }
+    ],
+    "summary": {
+      "session": "London",
+      "win_rate_call": 100.0,
+      "win_rate_put": 50.0,
+      "win_rate_overall": 100.0,
+      "avg_vol_quality": 70.0,
+      "avg_continuation": 60.0,
+      "sample_call": 14,
+      "sample_put": 0,
+      "total_trades": 14
+    }
+  },
+  "London_NY_Overlap": {
+    "history": [],
+    "summary": {
+      "session": "London_NY_Overlap",
+      "win_rate_call": 50.0,
+      "win_rate_put": 50.0,
+      "win_rate_overall": 50.0,
+      "avg_vol_quality": 70.0,
+      "avg_continuation": 60.0,
+      "sample_call": 0,
+      "sample_put": 0,
+      "total_trades": 0
+    }
+  },
+  "New_York": {
+    "history": [
+      {
+        "timestamp": "2026-06-04T18:56:00.563075",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.570960",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.581336",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.591190",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.601728",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.610639",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.620643",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.630744",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.640997",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.651598",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.661796",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.671857",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      },
+      {
+        "timestamp": "2026-06-04T18:56:00.682880",
+        "session": "New_York",
+        "direction": "CALL",
+        "result": "LOSS",
+        "vol_quality": 70.0,
+        "continuation": 60.0,
+        "ist_time": "22:00"
+      }
+    ],
+    "summary": {
+      "session": "New_York",
+      "win_rate_call": 0.0,
+      "win_rate_put": 50.0,
+      "win_rate_overall": 0.0,
+      "avg_vol_quality": 70.0,
+      "avg_continuation": 60.0,
+      "sample_call": 13,
+      "sample_put": 0,
+      "total_trades": 13
+    }
+  },
+  "Off_Hours": {
+    "history": [],
+    "summary": {
+      "session": "Off_Hours",
+      "win_rate_call": 50.0,
+      "win_rate_put": 50.0,
+      "win_rate_overall": 50.0,
+      "avg_vol_quality": 70.0,
+      "avg_continuation": 60.0,
+      "sample_call": 0,
+      "sample_put": 0,
+      "total_trades": 0
+    }
+  },
+  "_meta": {
+    "last_saved": "2026-06-04T18:56:00.687987",
+    "rolling_window": 60
+  }
+}

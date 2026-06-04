@@ -18,6 +18,7 @@ from market_safety import run_market_safety, check_high_impact_news, check_dange
 from confirmation_engine import validate_live_signal
 from signal_generator import decide_direction_live
 from learning_engine import learning_engine
+from market_regime import detect_market_regime, MartingaleAdaptiveController
 
 try:
     from zoneinfo import ZoneInfo
@@ -1480,6 +1481,36 @@ def _process_forced_signals(
             if signal.get("is_blocked"):
                 continue
 
+            # ── ADAPTIVE MARTINGALE GATE (forced 15:10) ─────────────────
+            # The forced martingale at 15:10 is still subject to regime gating.
+            # A SIDEWAYS/HIGH_VOL/REVERSAL_HEAVY regime blocks MG even here;
+            # the user sees a warning rather than a silent skip.
+            if is_martingale:
+                try:
+                    _mg_df = work_df if (work_df is not None and len(work_df) >= 50) else df
+                    _mg_regime_report = detect_market_regime(_mg_df)
+                    _mg_ctrl_result = MartingaleAdaptiveController.evaluate(_mg_regime_report)
+                    if not _mg_ctrl_result.allowed:
+                        _mg_block_key = f"forced_mg_blocked_{signal_time:%H:%M}"
+                        if _mg_block_key not in manager.processed_signals:
+                            manager.processed_signals.add(_mg_block_key)
+                            _mg_block_msg = (
+                                f"\u26a0\ufe0f <b>Martingale Blocked by Adaptive Regime Control</b>\n"
+                                f"Time: {signal_time:%H:%M} (forced)\n"
+                                f"Regime: {_mg_ctrl_result.regime} "
+                                f"(conf={_mg_ctrl_result.regime_confidence}%)\n"
+                                f"Reason: {_mg_ctrl_result.reason}"
+                            )
+                            messages.append(_mg_block_msg)
+                            logger.info(
+                                "[FORCED-MG] Blocked by adaptive controller: %s",
+                                _mg_ctrl_result.reason,
+                            )
+                        signal["is_blocked"] = True
+                        continue
+                except Exception as _mg_exc:
+                    logger.warning("[FORCED-MG] Adaptive gate error (allowing MG): %s", _mg_exc)
+
             # Use a dedup key that cannot collide with regular signals
             forced_key = f"forced_{signal_time:%H:%M}_{'MG' if is_martingale else 'DIR'}"
 
@@ -1745,7 +1776,7 @@ def process_signal_list(
             stale_count += 1
         else:
             fresh_signals.append(sig)
-            
+
     if stale_count > 0:
         logger.info(f"Cleaned up {stale_count} stale signal(s) from active queue.")
     manager.active_signals = fresh_signals
@@ -1778,52 +1809,27 @@ def process_signal_list(
             # Determine whether this is a 'next' signal for thresholding.
             is_next_signal = manager.evaluated_signal_count > 0
             base_threshold = 70 if is_next_signal else 75
-            threshold = get_adaptive_trade_threshold(base_threshold)
+            minute_df_local = minute_df if (minute_df is not None and len(minute_df) >= 200) else df
 
-            # Prefer minute-level data for pre-signal calculation; fallback to provided df.
-            pre_df = minute_df if (minute_df is not None and len(minute_df) >= 200) else df
-            pre_confidence = calculate_confidence(pre_df, direction)
+            if base_key not in manager.processed_signals:
+                confidence = calculate_confidence(minute_df_local, direction)
+                signal["stored_confidence"] = confidence
+                seconds_to_signal = (signal_time - now).total_seconds()
 
-            seconds_to_entry = (signal_time - now).total_seconds()
-            if PRE_SIGNAL_MIN_SECONDS <= seconds_to_entry <= PRE_SIGNAL_MAX_SECONDS and not signal.get("pre_sent"):
-                # Only send pre-signal when the confidence meets the same adaptive threshold
-                # AND it passes technical safety (ATR, RSI, Trend)
-                safety_ok, safety_reason, pre_confidence = _check_safety_rules(pre_df, direction, pre_confidence)
-                if pre_confidence >= threshold and safety_ok:
-                    messages.append(_build_pre_message(signal, pre_confidence, pre_df))
-                    signal["pre_sent"] = True
-                elif not safety_ok and "(GENERATED)" in signal.get("raw_line", ""):
-                    # Log why a generated signal was skipped at pre-signal stage
-                    logger.info(f"Skipping generated pre-signal at {signal['time']:%H:%M} - {safety_reason}")
-                    signal["pre_sent"] = True # Mark as "sent" to avoid repeat checks
+                if PRE_SIGNAL_MIN_SECONDS <= seconds_to_signal <= PRE_SIGNAL_MAX_SECONDS and not signal.get("pre_sent"):
+                    should_take, skip_reason, confidence = _should_take_signal(
+                        minute_df_local, direction, confidence, is_next_signal
+                    )
+                    if should_take:
+                        messages.append(_build_pre_message(signal, confidence, minute_df_local))
+                        signal["pre_sent"] = True
+                        signal["pre_confidence"] = confidence
+                        logger.info(f"PRE-SIGNAL sent: {signal_time:%H:%M} {direction} conf={confidence}%")
+                    else:
+                        logger.info(f"PRE skipped: {signal_time:%H:%M} {direction} — {skip_reason}")
 
-                if signal.get("pre_sent"):
-                    # Persist the pre-calculated confidence so confirmation uses the same value
-                    signal["pre_confidence"] = pre_confidence
-                    logger.debug(f"FINAL CONFIDENCE USED: {pre_confidence}%")
-
-            if abs((now - signal_time).total_seconds()) <= SIGNAL_WINDOW_SECONDS:
-                if base_key in manager.processed_signals:
-                    continue
-
-                signal_df = minute_df
-
-                if signal_df is None or len(signal_df) < 200:
-                    signal_df = df
-
-                # ALWAYS re-calculate confidence and run full re-checks at confirmation.
-                # Do NOT blindly trust pre-calculated values or timings.
-                confidence = calculate_confidence(signal_df, direction)
-                is_next_signal = manager.evaluated_signal_count > 0
-                
-                # Run full suite of checks: Indicators, Market Safety, and Live Confirmation
-                should_take, skip_reason, confidence = _should_take_signal(signal_df, direction, confidence, is_next_signal)
-
-                # Debug log final confidence used for decision
-                logger.debug(f"FINAL CONFIDENCE USED: {confidence}%")
-
-                if should_take:
-                    # --- Global trade lock check (regular signals) ---
+                if abs(seconds_to_signal) <= SIGNAL_WINDOW_SECONDS and not signal.get("confirmed_sent"):
+                    # --- Global trade lock check ---
                     if manager.last_confirmed_trade_time is not None:
                         elapsed = (now - manager.last_confirmed_trade_time).total_seconds()
                         if elapsed < TRADE_LOCK_SECONDS:
@@ -1836,37 +1842,40 @@ def process_signal_list(
                             manager.evaluated_signal_count += 1
                             continue
 
-                    _, tp, sl = build_forex_targets(signal_df, direction, confidence)
-                    expiry = signal_time + timedelta(minutes=5)
-                    messages.append(_build_confirm_message(signal, confidence, expiry, tp, sl, signal_df))
-                    # Store confirmed signal for result tracking
-                    try:
-                        entry_price = float(signal_df.iloc[-1]["Close"])
-                        store_tracked_signal(
-                            signal_time=signal_time,
-                            direction=direction,
-                            entry_price=entry_price,
-                            expiry_time=expiry,
-                            signal_type="direct",
-                            pair=signal.get("pair", "EURUSD"),
-                            confidence=confidence,
-                            df=signal_df,
-                            source=signal.get("source", "telegram"),
+                    confidence = calculate_confidence(minute_df_local, direction)
+                    signal["stored_confidence"] = confidence
+                    logger.debug(f"FINAL CONFIDENCE USED: {confidence}%")
+
+                    should_take, skip_reason, confidence = _should_take_signal(
+                        minute_df_local, direction, confidence, is_next_signal
+                    )
+                    if should_take:
+                        _, tp, sl = build_forex_targets(minute_df_local, direction, confidence)
+                        expiry = signal_time + timedelta(minutes=5)
+                        messages.append(
+                            _build_confirm_message(signal, confidence, expiry, tp, sl, minute_df_local)
                         )
-                    except Exception as e:
-                        logger.error(f"store_tracked_signal error: {e}")
-                    signal["confirmed_sent"] = True
-                    signal["martingale_confidence"] = confidence
-                    manager.confirmed_signal_count += 1
-                    manager.last_confirmed_trade_time = now  # Update global trade lock
-                    logger.info(f"Signal confirmed: {signal_time:%H:%M} {direction}")
-                else:
-                    # Market weakened between pre-signal and confirmation - skip safely
-                    logger.info(f"Skipping confirmation for {signal_time:%H:%M} {direction}: {skip_reason}")
-                    if signal.get("pre_sent"):
-                        one_hour_ago = now - timedelta(hours=1)
-                        manager.skip_message_times = [t for t in manager.skip_message_times if t > one_hour_ago]
-                        
+                        # Store confirmed signal
+                        try:
+                            entry_price = float(minute_df_local.iloc[-1]["Close"])
+                            store_tracked_signal(
+                                signal_time=signal_time,
+                                direction=direction,
+                                entry_price=entry_price,
+                                expiry_time=expiry,
+                                signal_type="direct",
+                                pair=signal.get("pair", "EURUSD"),
+                                confidence=confidence,
+                                df=minute_df_local,
+                                source=signal.get("source", "telegram"),
+                            )
+                        except Exception as e:
+                            logger.error(f"store_tracked_signal error: {e}")
+                        signal["confirmed_sent"] = True
+                        manager.last_confirmed_trade_time = now
+                        logger.info(f"Signal confirmed: {signal_time:%H:%M} {direction} conf={confidence}%")
+                    else:
+                        logger.info(f"Signal skipped: {signal_time:%H:%M} {direction} — {skip_reason}")
                         if len(manager.skip_message_times) < 5:
                             skip_msg = (
                                 f"⚠️ *SIGNAL SKIPPED*\n"
@@ -1882,6 +1891,24 @@ def process_signal_list(
 
             if not manager.enable_martingale:
                 continue
+
+            # ── ADAPTIVE MARTINGALE GATE (regular signals) ────────────────────
+            # Evaluate live regime before allowing any martingale pre-alert or
+            # confirmation.  Only TRENDING with strong confidence passes through.
+            try:
+                _reg_df = minute_df if (minute_df is not None and len(minute_df) >= 50) else df
+                _mg_result = MartingaleAdaptiveController.evaluate_from_df(_reg_df)
+                if not _mg_result.allowed:
+                    _mg_skip_key = f"mg_regime_blocked_{signal_time:%H:%M}_{direction}"
+                    if _mg_skip_key not in manager.processed_signals:
+                        manager.processed_signals.add(_mg_skip_key)
+                        logger.info(
+                            "[MG-Gate] Martingale skipped for %s %s — %s",
+                            signal_time.strftime("%H:%M"), direction, _mg_result.reason,
+                        )
+                    continue
+            except Exception as _mg_gate_exc:
+                logger.warning("[MG-Gate] Adaptive check error (allowing MG): %s", _mg_gate_exc)
 
             mg_time = signal["martingale_time"]
             mg_key = _signal_key(mg_time, direction)
@@ -1956,3 +1983,4 @@ def process_signal_list(
             continue
 
     return messages
+

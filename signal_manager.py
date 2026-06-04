@@ -554,6 +554,127 @@ class TimingPerformanceDB:
             self._save()
             logger.info("[TimingDB] Seeded %d new timing slots from backtest", updated)
 
+    # ──────────────────────────────────────────────────────
+    # Confidence Decay Integration
+    # ──────────────────────────────────────────────────────
+
+    @staticmethod
+    def apply_confidence_decay(signal: dict, now=None) -> tuple[float, dict]:
+        """
+        Apply time-based confidence decay to a single signal dict.
+
+        This is a thin wrapper around ConfidenceDecayEngine.apply_to_signal()
+        that can be called without importing probability_engine directly.
+
+        The decay is NON-DESTRUCTIVE — stored values (confidence,
+        probability_score) are never modified.  Instead the decayed value
+        and decay metadata are returned.
+
+        Decay schedule:
+            0 – 2 min  → no decay
+            2 – 5 min  → gradual decay  (up to –8 pts)
+            5 – 10 min → strong decay   (up to –25 pts)
+            10+ min    → capped at –25 pts (signal marked 'expired')
+
+        Args:
+            signal: dict with 'time' (HH:MM string or datetime) and
+                    'confidence' or 'probability_score' key.
+            now:    reference time (defaults to datetime.now())
+
+        Returns:
+            (decayed_confidence_float, detail_dict)
+        """
+        try:
+            from probability_engine import ConfidenceDecayEngine
+            return ConfidenceDecayEngine.apply_to_signal(signal, now=now)
+        except Exception as exc:
+            logger.warning("[TimingDB] Decay calculation failed (non-critical): %s", exc)
+            original = float(signal.get("confidence") or signal.get("probability_score") or 70.0)
+            return original, {"decay_zone": "fresh", "points_lost": 0.0, "tier_changed": False}
+
+    @staticmethod
+    def get_stale_signals(signals: list, now=None) -> list:
+        """
+        Return the subset of signals that are in the 'expired' decay zone
+        (10+ minutes past their scheduled entry time).
+
+        Args:
+            signals: list of signal dicts
+            now:     reference time (defaults to datetime.now())
+
+        Returns:
+            List of expired signal dicts (sub-list of input).
+        """
+        try:
+            from probability_engine import ConfidenceDecayEngine
+            return [s for s in signals if ConfidenceDecayEngine.is_signal_expired(s, now=now)]
+        except Exception:
+            return []
+
+    @staticmethod
+    def cleanup_stale_with_decay(signals: list, now=None) -> tuple[list, list]:
+        """
+        Filter an active signal list using confidence decay.
+
+        - Signals in 'expired' zone (10+ min old) are removed.
+        - Surviving signals are annotated with decay metadata in-place.
+        - Forced signals (is_forced=True) bypass the expired check.
+
+        Args:
+            signals: list of signal dicts (manager.active_signals)
+            now:     reference time (defaults to datetime.now())
+
+        Returns:
+            (fresh_signals, removed_signals)
+            Both are lists of signal dicts.
+        """
+        try:
+            from probability_engine import ConfidenceDecayEngine
+        except Exception:
+            return signals, []
+
+        fresh:   list = []
+        removed: list = []
+
+        for sig in signals:
+            try:
+                # Forced signals are immune to stale cleanup
+                if sig.get("is_forced"):
+                    fresh.append(sig)
+                    continue
+
+                decayed, detail = ConfidenceDecayEngine.apply_to_signal(sig, now=now)
+                zone = detail.get("decay_zone", "fresh")
+
+                # Annotate with decay info (non-destructive)
+                sig["confidence_decayed"]       = decayed
+                sig["confidence_decay_zone"]    = zone
+                sig["confidence_decay_pts"]     = detail.get("points_lost", 0.0)
+                sig["confidence_decay_age_min"] = detail.get("age_minutes", 0.0)
+
+                if zone == "expired":
+                    removed.append(sig)
+                    logger.info(
+                        "[TimingDB] Stale signal removed: %s %s (%.1f min old, conf %s→%.0f)",
+                        sig.get("time", "?"), sig.get("direction", "?"),
+                        detail.get("age_minutes", 0.0),
+                        sig.get("confidence") or sig.get("probability_score"),
+                        decayed,
+                    )
+                else:
+                    fresh.append(sig)
+
+            except Exception:
+                fresh.append(sig)  # keep on any error
+
+        if removed:
+            logger.info(
+                "[TimingDB] Stale cleanup: removed %d expired signals, %d remain",
+                len(removed), len(fresh),
+            )
+
+        return fresh, removed
+
 
 # ─────────────────────────────────────────────────────────
 # Global singleton — importable by signal_generator.py

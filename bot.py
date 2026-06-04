@@ -297,6 +297,13 @@ def maybe_send_daily_signal_list():
     if _daily_signal_list_sent_date == today:
         return
 
+    # Check for automated generation before sending
+    if now.hour == 9 and now.minute >= 50:
+        from signal_generator import has_run_today, generate_daily_signals
+        if not has_run_today():
+            logger.info("Triggering automated daily signal generation at 09:50+ AM")
+            generate_daily_signals()
+
     # Only send at / after 10:00 AM IST
     if now.hour < DAILY_SEND_HOUR or (now.hour == DAILY_SEND_HOUR and now.minute < DAILY_SEND_MINUTE):
         return

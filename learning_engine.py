@@ -444,3 +444,105 @@ def get_dynamic_weights() -> dict:
     If dynamic_weights.json is missing or empty, returns the v2 baseline.
     """
     return dynamic_weight_optimizer.get_weights()
+
+
+# ── Voter-weight forwarding helpers ────────────────────────────────────────
+# These proxies let bot.py call voter recording via the already-imported
+# learning_engine module, without needing a separate import.
+
+def record_voter_outcome(votes: dict, trade_result: str, direction: str) -> None:
+    """
+    Forward a completed trade's voter votes to the StrategyWeightTracker.
+
+    Call this from bot.py whenever a trade result (WIN/LOSS) is confirmed:
+        from learning_engine import record_voter_outcome
+        record_voter_outcome(signal.get("agreement_votes", {}), "WIN", signal["direction"])
+
+    Args:
+        votes:        Dict of voter_name → "CALL" | "PUT" | "NEUTRAL"
+                      Stored as signal["agreement_votes"] on each generated signal.
+        trade_result: "WIN" or "LOSS"
+        direction:    The signal direction that was traded ("CALL" or "PUT")
+    """
+    try:
+        from strategy_weight_tracker import strategy_weight_tracker as _swt
+        _swt.record_vote_outcomes(votes, trade_result, direction)
+    except Exception as exc:
+        logger.warning("[VoterRecord] Failed to record voter outcome: %s", exc)
+
+
+def get_voter_weight_report() -> str:
+    """
+    Return a formatted text report of current strategy voter weights.
+    Suitable for admin Telegram commands or log output.
+    """
+    try:
+        from strategy_weight_tracker import strategy_weight_tracker as _swt
+        return _swt.get_stats_report()
+    except Exception as exc:
+        return f"[VoterWeights] Report unavailable: {exc}"
+
+
+def get_voter_telegram_summary() -> str:
+    """
+    Return a short Telegram-friendly summary of current voter multipliers.
+    """
+    try:
+        from strategy_weight_tracker import strategy_weight_tracker as _swt
+        return _swt.get_telegram_summary()
+    except Exception as exc:
+        return f"[VoterWeights] Summary unavailable: {exc}"
+
+
+# ── Session Intelligence forwarding helpers ────────────────────────────────
+# These proxies let bot.py record session outcomes via the already-imported
+# learning_engine module without requiring a separate import chain.
+
+def record_session_outcome(
+    ist_minutes: int,
+    direction: str,
+    result: str,
+    df=None,
+) -> None:
+    """
+    Forward a completed trade result to the SessionIntelligence engine
+    for adaptive session win-rate tracking.
+
+    Call this from bot.py after a trade resolves:
+        from learning_engine import record_session_outcome
+        record_session_outcome(ist_minutes, signal["direction"], "WIN")
+
+    Args:
+        ist_minutes: signal time in IST minutes from midnight (h*60+m)
+        direction:   "CALL" or "PUT"
+        result:      "WIN" or "LOSS"
+        df:          optional enriched DataFrame (for live vol/cont metrics)
+    """
+    try:
+        from session_intelligence import session_intel as _si
+        _si.record_session_outcome(ist_minutes, direction, result, df)
+    except Exception as exc:
+        logger.warning("[SessionRecord] Failed to record session outcome: %s", exc)
+
+
+def get_session_performance_report() -> str:
+    """
+    Return a formatted text report of session-level performance.
+    Suitable for admin Telegram commands.
+    """
+    try:
+        from session_intelligence import session_intel as _si
+        return _si.get_performance_report()
+    except Exception as exc:
+        return f"[SessionIntel] Report unavailable: {exc}"
+
+
+def get_session_telegram_summary() -> str:
+    """
+    Return a short Telegram-friendly summary of session win rates.
+    """
+    try:
+        from session_intelligence import session_intel as _si
+        return _si.get_telegram_summary()
+    except Exception as exc:
+        return f"[SessionIntel] Summary unavailable: {exc}"

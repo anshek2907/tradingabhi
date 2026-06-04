@@ -1,12 +1,12 @@
 """
 agreement_engine.py
 ───────────────────
-Multi-Strategy Agreement Engine (8-voter system).
+Multi-Strategy Agreement Engine (9-voter system).
 
-Collects directional votes from 8 independent strategy sources and returns
+Collects directional votes from 9 independent strategy sources and returns
 an AgreementResult describing how strongly all strategies agree.
 
-8 Strategy Voters:
+9 Strategy Voters:
   1. EMA_Trend              – EMA50 vs EMA200 directional cross
   2. RSI_Momentum           – RSI direction + momentum trend
   3. Pattern_Engine         – Recurring historical win-rate for this slot+direction
@@ -15,11 +15,12 @@ an AgreementResult describing how strongly all strategies agree.
   6. Volatility_Clustering  – Healthy volatility zone + quality score alignment
   7. Live_Confirmation      – EMA + RSI + ATR live gate (same as confirmation engine)
   8. Momentum_Continuation  – Candle momentum continuation score
+  9. Sequence_Pattern       – Multi-candle sequence pattern engine (6 pattern types)
 
-Agreement Tiers (Option A — 8-voter system):
-  6/8+ votes matching direction → STRONG_SIGNAL
-  5/8   votes matching direction → MODERATE_SIGNAL
-  <5/8                          → SKIP
+Agreement Tiers (9-voter system):
+  7/9+ votes matching direction → STRONG_SIGNAL
+  5/9-6/9 votes matching direction → MODERATE_SIGNAL
+  <5/9                          → SKIP
 
 Usage:
     from agreement_engine import agreement_engine, AgreementResult, AGREEMENT_SKIP
@@ -36,6 +37,7 @@ from typing import Optional
 import pandas as pd
 
 from logger import logger
+from sequence_engine import sequence_engine, get_sequence_vote, SequenceResult
 
 # ── Voter names (canonical) ────────────────────────────────────────────────
 VOTER_EMA_TREND         = "EMA_Trend"
@@ -46,6 +48,7 @@ VOTER_MARKET_REGIME     = "Market_Regime"
 VOTER_VOLATILITY        = "Volatility_Clustering"
 VOTER_LIVE_CONFIRMATION = "Live_Confirmation"
 VOTER_MOMENTUM_CONT     = "Momentum_Continuation"
+VOTER_SEQUENCE_PATTERN  = "Sequence_Pattern"
 
 ALL_VOTERS = [
     VOTER_EMA_TREND,
@@ -56,17 +59,18 @@ ALL_VOTERS = [
     VOTER_VOLATILITY,
     VOTER_LIVE_CONFIRMATION,
     VOTER_MOMENTUM_CONT,
+    VOTER_SEQUENCE_PATTERN,
 ]
 
-TOTAL_VOTERS = len(ALL_VOTERS)  # 8
+TOTAL_VOTERS = len(ALL_VOTERS)  # 9
 
 # ── Agreement tiers ────────────────────────────────────────────────────────
 AGREEMENT_STRONG   = "STRONG_SIGNAL"
 AGREEMENT_MODERATE = "MODERATE_SIGNAL"
 AGREEMENT_SKIP     = "SKIP"
 
-STRONG_THRESHOLD   = 6  # 6/8+ → STRONG
-MODERATE_THRESHOLD = 5  # 5/8  → MODERATE
+STRONG_THRESHOLD   = 7  # 7/9+ → STRONG
+MODERATE_THRESHOLD = 5  # 5/9-6/9 → MODERATE
 
 # ── Vote values ────────────────────────────────────────────────────────────
 VOTE_CALL    = "CALL"
@@ -335,6 +339,18 @@ class AgreementEngine:
         except Exception:
             votes[VOTER_MOMENTUM_CONT] = VOTE_NEUTRAL
 
+        # ── Voter 9: Sequence Pattern ──────────────────────────────────────
+        # Multi-candle sequence engine: detects continuation, breakout, exhaustion,
+        # momentum chain, and wick rejection patterns. Casts directional vote when
+        # sequence_confidence >= 40. Strong patterns reinforce; weak/conflicting reduce.
+        try:
+            # Accept pre-computed seq_result if passed; otherwise run analysis
+            seq_result: SequenceResult = metrics.get("_sequence_result") or \
+                sequence_engine.analyse(df, direction_hint=direction)
+            votes[VOTER_SEQUENCE_PATTERN] = get_sequence_vote(seq_result, direction)
+        except Exception:
+            votes[VOTER_SEQUENCE_PATTERN] = VOTE_NEUTRAL
+
         # ── Tally votes ────────────────────────────────────────────────────
         bullish_votes = sum(1 for v in votes.values() if v == VOTE_CALL)
         bearish_votes = sum(1 for v in votes.values() if v == VOTE_PUT)
@@ -373,7 +389,7 @@ class AgreementEngine:
 
         logger.debug(
             "[Agreement] %s %s | score=%d/%d | tier=%s | "
-            "EMA=%s RSI=%s Pat=%s Prob=%s Reg=%s Vol=%s Live=%s Mom=%s",
+            "EMA=%s RSI=%s Pat=%s Prob=%s Reg=%s Vol=%s Live=%s Mom=%s Seq=%s",
             direction, regime,
             agreement_score, TOTAL_VOTERS, tier,
             votes.get(VOTER_EMA_TREND,         "?"),
@@ -384,6 +400,7 @@ class AgreementEngine:
             votes.get(VOTER_VOLATILITY,         "?"),
             votes.get(VOTER_LIVE_CONFIRMATION,  "?"),
             votes.get(VOTER_MOMENTUM_CONT,      "?"),
+            votes.get(VOTER_SEQUENCE_PATTERN,   "?"),
         )
 
         return result

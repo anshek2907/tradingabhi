@@ -52,26 +52,42 @@ from typing import Optional
 
 from logger import logger
 
+# ── Lazy import of weight tracker (avoids circular imports) ─────────────
+# strategy_weight_tracker is imported lazily inside methods so that
+# probability_engine can be imported standalone without requiring the full
+# tracker module to be initialised first.
+_weight_tracker_ref = None
+
+def _get_weight_tracker():
+    global _weight_tracker_ref
+    if _weight_tracker_ref is None:
+        try:
+            from strategy_weight_tracker import strategy_weight_tracker as _swt
+            _weight_tracker_ref = _swt
+        except Exception:
+            pass
+    return _weight_tracker_ref
+
 # ── Signal tier labels ─────────────────────────────────────
 TIER_STRONG   = "STRONG_SIGNAL"
 TIER_MODERATE = "MODERATE_SIGNAL"
 TIER_SKIP     = "SKIP"
 
-TIER_STRONG_MIN   = 80.0
-TIER_MODERATE_MIN = 70.0
+TIER_STRONG_MIN   = 78.0
+TIER_MODERATE_MIN = 68.0
 
 # ── Dynamic minimum score thresholds per regime ────────────
 # These are applied as the SKIP floor in is_acceptable_for_regime().
 # STRONG/MODERATE tiers are determined by TIER_STRONG_MIN/TIER_MODERATE_MIN;
 # however, signals in MODERATE range below the regime floor are rejected.
 _REGIME_MIN_SCORE: dict[str, float] = {
-    "TRENDING":        70.0,   # good quality continuation allowed
-    "MODERATE":        72.0,   # default moderate market
-    "SIDEWAYS":        78.0,   # stricter — avoid choppy noise
-    "HIGH_VOLATILITY": 80.0,   # strong signals only
-    "REVERSAL_HEAVY":  80.0,   # maximum caution
+    "TRENDING":        68.0,   # allow moderate signals
+    "MODERATE":        68.0,   # allow moderate signals
+    "SIDEWAYS":        68.0,   # allow moderate signals
+    "HIGH_VOLATILITY": 68.0,   # allow moderate signals
+    "REVERSAL_HEAVY":  78.0,   # requires strong
 }
-_DEFAULT_MIN_SCORE = 72.0
+_DEFAULT_MIN_SCORE = 68.0
 
 # ── Regime multipliers ─────────────────────────────────────
 _REGIME_MULTIPLIER: dict[str, float] = {
@@ -246,26 +262,78 @@ class ProbabilityEngine:
     # ── Public API ─────────────────────────────────────────
 
     @staticmethod
-    def compute(inputs: ProbabilityInputs) -> ProbabilityResult:
+    def compute(
+        inputs: ProbabilityInputs,
+        voter_weight_adjustments: Optional[dict] = None,
+    ) -> ProbabilityResult:
         """
         Compute the centralized probability score for one candidate slot.
 
+        Args:
+            inputs:                  All raw sub-metrics (ProbabilityInputs).
+            voter_weight_adjustments: Optional dict of metric_key → multiplier
+                                     from StrategyWeightTracker.get_formula_weight_adjustments().
+                                     When supplied, each formula weight is scaled
+                                     by its voter-performance multiplier before scoring.
+                                     This implements the Dynamic Strategy Weighting system.
+
         Steps:
-          1. Compute weighted linear sum (all positive terms + reversal penalty)
-          2. Apply quality micro-penalties for structural weaknesses
-          3. Apply regime multiplier (boost or reduce based on market type)
-          4. Clamp to [0, 100]
-          5. Classify into STRONG / MODERATE / SKIP tier
+          1. Build effective weights (baseline * voter multiplier, re-normalised)
+          2. Compute weighted linear sum (all positive terms + reversal penalty)
+          3. Apply quality micro-penalties for structural weaknesses
+          4. Apply regime multiplier (boost or reduce based on market type)
+          5. Clamp to [0, 100]
+          6. Classify into STRONG / MODERATE / SKIP tier
         """
+        # ── Step 0: Build effective weights (voter-adaptive) ──────────
+        # Apply voter multipliers to the baseline formula weights.
+        # Each metric multiplier is clamped to [0.60, 1.40] (enforced in tracker)
+        # so no single voter can dominate or zero-out a component.
+        # After scaling, weights are re-normalised so positive contributions
+        # still sum to 1.0, preserving the overall score range.
+        adj = voter_weight_adjustments or {}
+
+        def _w(key: str) -> float:
+            return _WEIGHTS[key] * float(adj.get(key, 1.0))
+
+        raw_win_rate  = _w("win_rate")
+        raw_dir_cons  = _w("direction_consistency")
+        raw_atr       = _w("atr_quality")
+        raw_momentum  = _w("momentum_strength")
+        raw_session   = _w("session_strength")
+        raw_vol       = _w("volatility_quality")
+        raw_reversal  = _w("reversal_risk")
+
+        # Positive weights (excluding reversal penalty which is subtracted)
+        _pos_sum = raw_win_rate + raw_dir_cons + raw_atr + raw_momentum + raw_session + raw_vol
+        _norm = (_pos_sum / (sum(_WEIGHTS[k] for k in (
+            "win_rate", "direction_consistency", "atr_quality",
+            "momentum_strength", "session_strength", "volatility_quality"
+        )))) if _pos_sum > 0 else 1.0
+
+        # Effective weights (normalised so formula output scale stays [0,100])
+        eff_win_rate  = raw_win_rate  / _norm
+        eff_dir_cons  = raw_dir_cons  / _norm
+        eff_atr       = raw_atr       / _norm
+        eff_momentum  = raw_momentum  / _norm
+        eff_session   = raw_session   / _norm
+        eff_vol       = raw_vol       / _norm
+        eff_reversal  = raw_reversal  # penalty — not normalised (kept consistent)
+
+        if adj:
+            logger.debug(
+                "[ProbEng] Voter adjustments applied: %s",
+                {k: round(v, 3) for k, v in adj.items()},
+            )
+
         # ── Step 1: Weighted linear components ────────────
-        # v2 weights: win_rate↑, momentum↑, reversal penalty↓, ATR/session/vol↓
-        contrib_win_rate  = inputs.win_rate              * _WEIGHTS["win_rate"]
-        contrib_dir_cons  = inputs.direction_consistency * _WEIGHTS["direction_consistency"]
-        contrib_atr       = inputs.atr_quality           * _WEIGHTS["atr_quality"]
-        contrib_momentum  = inputs.momentum_strength     * _WEIGHTS["momentum_strength"]
-        contrib_session   = inputs.session_strength      * _WEIGHTS["session_strength"]
-        contrib_vol       = inputs.volatility_quality    * _WEIGHTS["volatility_quality"]
-        contrib_reversal  = inputs.reversal_risk         * _WEIGHTS["reversal_risk"]   # penalty
+        contrib_win_rate  = inputs.win_rate              * eff_win_rate
+        contrib_dir_cons  = inputs.direction_consistency * eff_dir_cons
+        contrib_atr       = inputs.atr_quality           * eff_atr
+        contrib_momentum  = inputs.momentum_strength     * eff_momentum
+        contrib_session   = inputs.session_strength      * eff_session
+        contrib_vol       = inputs.volatility_quality    * eff_vol
+        contrib_reversal  = inputs.reversal_risk         * eff_reversal   # penalty
 
         linear = (
             contrib_win_rate
@@ -370,6 +438,27 @@ class ProbabilityEngine:
         return result
 
     @staticmethod
+    def compute_with_voter_weights(
+        inputs: ProbabilityInputs,
+    ) -> ProbabilityResult:
+        """
+        Convenience wrapper that automatically pulls current voter-performance
+        weight adjustments from StrategyWeightTracker and feeds them into compute().
+
+        Use this in the main signal pipeline instead of bare compute() to
+        enable fully automatic Dynamic Strategy Weighting.
+        """
+        tracker = _get_weight_tracker()
+        if tracker is not None:
+            try:
+                adj = tracker.get_formula_weight_adjustments()
+            except Exception:
+                adj = {}
+        else:
+            adj = {}
+        return ProbabilityEngine.compute(inputs, voter_weight_adjustments=adj)
+
+    @staticmethod
     def is_acceptable(result: ProbabilityResult) -> bool:
         """Return True if the signal should be kept (not SKIPped)."""
         return result.signal_tier != TIER_SKIP
@@ -421,3 +510,283 @@ class ProbabilityEngine:
 
 # ── Global singleton ───────────────────────────────────────
 probability_engine = ProbabilityEngine()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Confidence Decay Engine
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ConfidenceDecayEngine:
+    """
+    Non-destructive confidence decay engine.
+
+    Computes how much a signal's confidence should decrease based on its age
+    (time elapsed since the signal's scheduled entry time).  The decay is
+    applied at READ TIME — stored values are never modified, so historical
+    records remain intact.
+
+    Decay schedule (tunable):
+    ┌────────────────┬─────────────────────────────────────────────────┐
+    │ Age            │ Effect                                           │
+    ├────────────────┼─────────────────────────────────────────────────┤
+    │ 0 – 2 min      │ No decay  (freshness window — entry just opened)│
+    │ 2 – 5 min      │ Gradual linear decay  (0 → MAX_MILD pts lost)   │
+    │ 5 – 10 min     │ Strong linear decay   (MAX_MILD → MAX_STRONG)   │
+    │ 10+ min        │ Capped at MAX_STRONG  (no further reduction)     │
+    └────────────────┴─────────────────────────────────────────────────┘
+
+    Example with defaults (MAX_MILD=8, MAX_STRONG=25):
+        0 min  →  0 pts lost  (100% original)
+        2 min  →  0 pts lost
+        3 min  →  ~2.7 pts lost
+        5 min  →  8 pts lost
+        7 min  →  ~14.7 pts lost
+        10 min →  25 pts lost
+        15 min →  25 pts lost  (capped)
+
+    The minimum decayed confidence floor is 20 — a signal is never zeroed.
+
+    Usage:
+        from probability_engine import confidence_decay_engine
+        decayed, detail = confidence_decay_engine.apply(original_conf, age_seconds)
+    """
+
+    # ── Tunable constants ──────────────────────────────────────────────────
+
+    # Phase 1: no decay window (seconds)
+    FRESH_WINDOW_SEC    = 2 * 60     # 0 – 2 minutes
+
+    # Phase 2: gradual decay zone end (seconds)
+    MILD_END_SEC        = 5 * 60     # 2 – 5 minutes
+
+    # Phase 3: strong decay zone end (seconds) — capped after this
+    STRONG_END_SEC      = 10 * 60   # 5 – 10 minutes
+
+    # Maximum point loss at end of gradual (mild) zone
+    MAX_MILD_DECAY      = 8.0       # pts lost at 5 min
+
+    # Maximum point loss at end of strong zone (and beyond)
+    MAX_STRONG_DECAY    = 25.0      # pts lost at 10+ min
+
+    # Absolute floor — no signal confidence goes below this
+    CONFIDENCE_FLOOR    = 20.0
+
+    # ── Core API ──────────────────────────────────────────────────────────
+
+    @classmethod
+    def apply(
+        cls,
+        original_confidence: float,
+        age_seconds: float,
+    ) -> tuple[float, dict]:
+        """
+        Apply time-based decay to a signal confidence value.
+
+        Args:
+            original_confidence: original score [0, 100]
+            age_seconds:         seconds elapsed since signal entry time
+                                 (negative = signal is in the future → no decay)
+
+        Returns:
+            (decayed_confidence, detail_dict)
+
+        detail_dict keys:
+            age_seconds          : exact age passed in
+            age_minutes          : age in minutes (rounded to 2 dp)
+            decay_zone           : 'fresh' | 'mild' | 'strong' | 'expired'
+            points_lost          : float pts subtracted from original score
+            decayed_confidence   : final score after decay + floor clamp
+            tier_before          : STRONG/MODERATE/SKIP tier from original
+            tier_after           : STRONG/MODERATE/SKIP tier after decay
+            tier_changed         : bool — True if tier degraded
+        """
+        age_seconds = max(0.0, float(age_seconds))
+        original    = max(0.0, min(100.0, float(original_confidence)))
+
+        # ── Compute points lost ──────────────────────────────────────────
+        if age_seconds <= cls.FRESH_WINDOW_SEC:
+            # Zone 1 — fresh: no decay
+            points_lost = 0.0
+            zone        = "fresh"
+
+        elif age_seconds <= cls.MILD_END_SEC:
+            # Zone 2 — mild: linear ramp from 0 to MAX_MILD_DECAY
+            t           = (age_seconds - cls.FRESH_WINDOW_SEC) / (cls.MILD_END_SEC - cls.FRESH_WINDOW_SEC)
+            points_lost = t * cls.MAX_MILD_DECAY
+            zone        = "mild"
+
+        elif age_seconds <= cls.STRONG_END_SEC:
+            # Zone 3 — strong: linear ramp from MAX_MILD to MAX_STRONG
+            t           = (age_seconds - cls.MILD_END_SEC) / (cls.STRONG_END_SEC - cls.MILD_END_SEC)
+            points_lost = cls.MAX_MILD_DECAY + t * (cls.MAX_STRONG_DECAY - cls.MAX_MILD_DECAY)
+            zone        = "strong"
+
+        else:
+            # Zone 4 — expired: capped at MAX_STRONG
+            points_lost = cls.MAX_STRONG_DECAY
+            zone        = "expired"
+
+        decayed = max(cls.CONFIDENCE_FLOOR, original - points_lost)
+
+        # ── Tier reclassification ────────────────────────────────────────
+        tier_before = _classify_tier(original)
+        tier_after  = _classify_tier(decayed)
+
+        detail = {
+            "age_seconds":        round(age_seconds, 1),
+            "age_minutes":        round(age_seconds / 60, 2),
+            "decay_zone":         zone,
+            "points_lost":        round(points_lost, 2),
+            "original_confidence": round(original, 2),
+            "decayed_confidence": round(decayed, 2),
+            "tier_before":        tier_before,
+            "tier_after":         tier_after,
+            "tier_changed":       tier_before != tier_after,
+        }
+
+        if points_lost > 0:
+            logger.debug(
+                "[Decay] age=%.0fs (%.1fmin) zone=%s lost=%.1f pts  "
+                "%s → %.1f  tier=%s→%s",
+                age_seconds, age_seconds / 60, zone, points_lost,
+                original, decayed, tier_before, tier_after,
+            )
+
+        return round(decayed, 2), detail
+
+    @classmethod
+    def apply_to_signal(cls, signal: dict, now=None) -> tuple[float, dict]:
+        """
+        Convenience wrapper for a signal dict.
+
+        Reads the signal's 'time' field (HH:MM string or datetime), computes
+        the age vs `now`, then applies decay.
+
+        Args:
+            signal: dict with at minimum 'time' (str HH:MM) and
+                    'confidence' or 'probability_score' key.
+            now:    reference time (datetime-like). Defaults to datetime.now().
+
+        Returns:
+            (decayed_confidence, detail_dict)
+        """
+        from datetime import datetime as _dt
+        import pandas as _pd
+
+        if now is None:
+            now = _dt.now()
+
+        # Convert 'now' to naive datetime if needed
+        if hasattr(now, 'tzinfo') and now.tzinfo is not None:
+            try:
+                now = now.replace(tzinfo=None)
+            except Exception:
+                pass
+
+        # Extract original confidence
+        original = float(
+            signal.get("probability_score")
+            or signal.get("confidence")
+            or 70.0
+        )
+
+        # Parse signal time
+        sig_time = signal.get("time")
+        if sig_time is None:
+            return original, {"decay_zone": "fresh", "points_lost": 0.0, "age_seconds": 0.0,
+                              "decayed_confidence": original, "tier_changed": False}
+
+        try:
+            if isinstance(sig_time, str):
+                h, m = map(int, sig_time.split(":"))
+                today = now.date()
+                from datetime import time as _time
+                sig_dt = _dt.combine(today, _time(h, m))
+            elif isinstance(sig_time, _dt):
+                sig_dt = sig_time.replace(tzinfo=None) if getattr(sig_time, 'tzinfo', None) else sig_time
+            else:
+                sig_dt = _dt.combine(now.date(), sig_time)
+
+            age_seconds = (now - sig_dt).total_seconds()
+        except Exception:
+            age_seconds = 0.0
+
+        return cls.apply(original, age_seconds)
+
+    # ── Batch API ─────────────────────────────────────────────────────────
+
+    @classmethod
+    def apply_to_signal_list(cls, signals: list, now=None) -> list:
+        """
+        Apply decay to a list of signal dicts.
+
+        For each signal adds/updates:
+            - confidence_decayed      : decayed confidence value
+            - confidence_decay_zone   : 'fresh'|'mild'|'strong'|'expired'
+            - confidence_decay_pts    : points removed
+            - confidence_decay_age_min: age in minutes
+
+        Original 'confidence' and 'probability_score' are NOT modified.
+
+        Args:
+            signals: list of signal dicts
+            now:     reference time (default: datetime.now())
+
+        Returns:
+            Same list with decay metadata added in-place.
+        """
+        for sig in signals:
+            try:
+                decayed, detail = cls.apply_to_signal(sig, now=now)
+                sig["confidence_decayed"]       = decayed
+                sig["confidence_decay_zone"]    = detail.get("decay_zone", "fresh")
+                sig["confidence_decay_pts"]     = detail.get("points_lost", 0.0)
+                sig["confidence_decay_age_min"] = detail.get("age_minutes", 0.0)
+                sig["confidence_tier_after"]    = detail.get("tier_after", TIER_SKIP)
+            except Exception:
+                pass
+        return signals
+
+    # ── Utility ───────────────────────────────────────────────────────────
+
+    @classmethod
+    def is_signal_expired(cls, signal: dict, now=None) -> bool:
+        """
+        Return True when a signal has passed its strong-decay cap boundary
+        (10+ minutes old) — suitable for stale-signal cleanup decisions.
+        Signals past STRONG_END_SEC are considered effectively expired.
+        """
+        _, detail = cls.apply_to_signal(signal, now=now)
+        return detail.get("decay_zone") == "expired"
+
+    @classmethod
+    def get_decay_summary_text(cls, signal: dict, now=None) -> str:
+        """
+        Return a compact one-line decay summary for logging/Telegram.
+
+        Example: "⏱ 3.2 min old | mild decay | -2.7 pts | conf 84→81"
+        """
+        orig   = float(signal.get("probability_score") or signal.get("confidence") or 70.0)
+        decayed, detail = cls.apply_to_signal(signal, now=now)
+        zone   = detail.get("decay_zone", "fresh")
+        age    = detail.get("age_minutes", 0.0)
+        lost   = detail.get("points_lost", 0.0)
+        emoji  = {"fresh": "🟢", "mild": "🟡", "strong": "🔴", "expired": "⛔"}.get(zone, "")
+        return (
+            f"{emoji} {age:.1f}min old | {zone} decay "
+            f"| -{lost:.1f}pts | conf {orig:.0f}→{decayed:.0f}"
+        )
+
+
+# ── Convenience module-level singleton ──────────────────────────────────────
+confidence_decay_engine = ConfidenceDecayEngine()
+
+
+def apply_decay_to_signal(signal: dict, now=None) -> tuple[float, dict]:
+    """
+    Module-level shortcut.  Equivalent to confidence_decay_engine.apply_to_signal().
+    Import and call directly from any module without importing the class.
+
+    Returns: (decayed_confidence, detail_dict)
+    """
+    return ConfidenceDecayEngine.apply_to_signal(signal, now=now)

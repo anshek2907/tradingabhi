@@ -44,52 +44,52 @@ ALL_REGIMES = [REGIME_TRENDING, REGIME_SIDEWAYS, REGIME_HIGH_VOLATILITY, REGIME_
 #   HIGH_VOL/REV    : 2–5 signals   (maximum caution)
 _REGIME_BEHAVIOR = {
     REGIME_TRENDING: {
-        "target":            12,   # allow 8-15 continuation signals; 12 is balanced mid
-        "target_min":        8,    # floor for trending market
-        "target_max":        15,   # ceiling for trending market
-        "threshold":         70,   # dynamic min score per requirements
-        "min_pattern_str":   52,   # lower bar — continuation is reliable
-        "reversal_prob_max": 55,   # more tolerant of reversals in trending
-        "atr_ratio_min":     0.60, # healthy ATR required (relaxed from 0.65)
-        "atr_ratio_max":     2.30, # spike limit (relaxed from 2.20)
+        "target":            15,
+        "target_min":        10,
+        "target_max":        15,
+        "threshold":         68,
+        "min_pattern_str":   70,
+        "reversal_prob_max": 40.0,
+        "atr_ratio_min":     0.80,
+        "atr_ratio_max":     3.00,
         "allow_weak_setups": False,
-        "description":       "Trending market — allow 8-15 quality continuation signals",
+        "description":       "Strong trend — target 10-15 momentum-aligned signals",
     },
     REGIME_SIDEWAYS: {
-        "target":            4,    # allow 2-5 signals; 4 is balanced mid
-        "target_min":        2,    # floor for sideways
-        "target_max":        5,    # ceiling for sideways
-        "threshold":         78,   # stricter threshold per requirements
-        "min_pattern_str":   65,   # high conviction required (relaxed from 68)
-        "reversal_prob_max": 42,   # slightly relaxed (was 45) to avoid over-rejection
-        "atr_ratio_min":     0.58, # relaxed from 0.60
-        "atr_ratio_max":     1.65, # relaxed from 1.60
+        "target":            10,
+        "target_min":        6,
+        "target_max":        10,
+        "threshold":         68,
+        "min_pattern_str":   75,
+        "reversal_prob_max": 35.0,
+        "atr_ratio_min":     0.50,
+        "atr_ratio_max":     2.00,
         "allow_weak_setups": False,
-        "description":       "Sideways market — allow 2-5 high-conviction signals only",
+        "description":       "Ranging — target 6-10 high-probability boundary reversion signals",
     },
     REGIME_HIGH_VOLATILITY: {
-        "target":            4,    # allow 2-5 signals; 4 is balanced mid
-        "target_min":        2,
-        "target_max":        5,
-        "threshold":         80,   # strong signals only per requirements
-        "min_pattern_str":   68,   # high conviction (relaxed from 72)
-        "reversal_prob_max": 42,   # relaxed from 40 to reduce over-filtering
-        "atr_ratio_min":     0.75, # relaxed from 0.80
-        "atr_ratio_max":     1.85, # relaxed from 1.80
+        "target":            6,
+        "target_min":        3,
+        "target_max":        6,
+        "threshold":         68,
+        "min_pattern_str":   80,
+        "reversal_prob_max": 25.0,
+        "atr_ratio_min":     1.20,
+        "atr_ratio_max":     4.00,
         "allow_weak_setups": False,
-        "description":       "High volatility — allow 2-5 strong signals with ATR safety",
+        "description":       "High volatility — target 3-6 ultra-safe extreme setups",
     },
     REGIME_REVERSAL_HEAVY: {
-        "target":            3,    # minimal: 2-5, target=3
-        "target_min":        2,
-        "target_max":        5,
-        "threshold":         80,   # strong signals only per requirements (was 82)
-        "min_pattern_str":   70,   # relaxed from 75 to allow proven recurring timings
-        "reversal_prob_max": 38,   # relaxed from 35 — slightly more tolerant
-        "atr_ratio_min":     0.65, # relaxed from 0.70
-        "atr_ratio_max":     2.10, # relaxed from 2.00
+        "target":            6,
+        "target_min":        3,
+        "target_max":        6,
+        "threshold":         78,
+        "min_pattern_str":   75,
+        "reversal_prob_max": 50.0,
+        "atr_ratio_min":     0.70,
+        "atr_ratio_max":     2.10,
         "allow_weak_setups": False,
-        "description":       "Reversal-heavy — allow 2-5 proven signals with strong confirmation",
+        "description":       "Reversal-heavy — target 3-6 proven signals with strong confirmation",
     },
 }
 
@@ -408,3 +408,194 @@ def _default_regime() -> dict:
         "candle_body_strength": 0.5,
         "behavior":             get_regime_behavior(REGIME_SIDEWAYS),
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Adaptive Martingale Controller
+# ─────────────────────────────────────────────────────────────────────────────
+
+class MartingaleAdaptiveController:
+    """
+    Regime-aware martingale gate.
+
+    Rules (per spec):
+    ┌────────────────────┬────────────────────────────────────────────────────┐
+    │ Regime             │ Martingale Decision                                │
+    ├────────────────────┼────────────────────────────────────────────────────┤
+    │ TRENDING           │ ALLOW MG1 — only when regime confidence ≥ MIN_CONF │
+    │ SIDEWAYS           │ BLOCK — choppy markets invalidate MG logic         │
+    │ HIGH_VOLATILITY    │ BLOCK — unpredictable swings, avoid doubling       │
+    │ REVERSAL_HEAVY     │ BLOCK — frequent flips destroy martingale chains   │
+    │ Unknown / default  │ BLOCK (safe default)                               │
+    └────────────────────┴────────────────────────────────────────────────────┘
+
+    Confidence gate:
+        Even in TRENDING, martingale is blocked if regime_confidence < MIN_CONF.
+        This prevents MG on a weakly-detected trend that may actually be noise.
+
+    Usage:
+        from market_regime import MartingaleAdaptiveController
+        result = MartingaleAdaptiveController.evaluate(regime_report)
+        if result.allowed:
+            # proceed with martingale
+        else:
+            logger.info(result.reason)
+    """
+
+    # Minimum regime confidence required to allow martingale (even in TRENDING)
+    MIN_CONFIDENCE: int = 55
+
+    # ── Decision result ──────────────────────────────────────────────────
+
+    class Result:
+        """Immutable martingale decision result."""
+        __slots__ = ("allowed", "regime", "regime_confidence", "reason")
+
+        def __init__(
+            self,
+            allowed:           bool,
+            regime:            str,
+            regime_confidence: int,
+            reason:            str,
+        ) -> None:
+            self.allowed           = allowed
+            self.regime            = regime
+            self.regime_confidence = regime_confidence
+            self.reason            = reason
+
+        def __repr__(self) -> str:
+            status = "ALLOWED" if self.allowed else "BLOCKED"
+            return (
+                f"MartingaleResult({status} | {self.regime} "
+                f"conf={self.regime_confidence}% | {self.reason})"
+            )
+
+        def as_dict(self) -> dict:
+            return {
+                "martingale_allowed":    self.allowed,
+                "regime":                self.regime,
+                "regime_confidence":     self.regime_confidence,
+                "martingale_reason":     self.reason,
+            }
+
+    # ── Core API ─────────────────────────────────────────────────────────
+
+    @classmethod
+    def evaluate(
+        cls,
+        regime_report: dict,
+    ) -> "MartingaleAdaptiveController.Result":
+        """
+        Evaluate whether martingale is permitted given the current regime.
+
+        Args:
+            regime_report: dict returned by detect_market_regime() containing
+                           at minimum 'regime' (str) and 'confidence' (int).
+
+        Returns:
+            MartingaleAdaptiveController.Result
+        """
+        regime     = regime_report.get("regime", REGIME_SIDEWAYS)
+        confidence = int(regime_report.get("confidence", 0))
+
+        # ── Rule 1: only TRENDING allows martingale ───────────────────────
+        if regime == REGIME_SIDEWAYS:
+            reason = (
+                f"Martingale blocked — SIDEWAYS regime (conf={confidence}%): "
+                "choppy price action invalidates martingale logic"
+            )
+            logger.info("[MG-Ctrl] %s", reason)
+            return cls.Result(False, regime, confidence, reason)
+
+        if regime == REGIME_HIGH_VOLATILITY:
+            reason = (
+                f"Martingale blocked — HIGH_VOLATILITY regime (conf={confidence}%): "
+                "unpredictable swings make doubling dangerous"
+            )
+            logger.info("[MG-Ctrl] %s", reason)
+            return cls.Result(False, regime, confidence, reason)
+
+        if regime == REGIME_REVERSAL_HEAVY:
+            reason = (
+                f"Martingale blocked — REVERSAL_HEAVY regime (conf={confidence}%): "
+                "frequent direction flips destroy martingale chains"
+            )
+            logger.info("[MG-Ctrl] %s", reason)
+            return cls.Result(False, regime, confidence, reason)
+
+        if regime != REGIME_TRENDING:
+            # Unknown/unexpected regime — block by default (safety-first)
+            reason = (
+                f"Martingale blocked — unknown regime '{regime}' (conf={confidence}%): "
+                "defaulting to block for safety"
+            )
+            logger.warning("[MG-Ctrl] %s", reason)
+            return cls.Result(False, regime, confidence, reason)
+
+        # ── Rule 2: TRENDING — check confidence gate ───────────────────────
+        if confidence < cls.MIN_CONFIDENCE:
+            reason = (
+                f"Martingale blocked — TRENDING regime confidence too low "
+                f"({confidence}% < {cls.MIN_CONFIDENCE}% required): "
+                "trend may be noise, not a reliable continuation"
+            )
+            logger.info("[MG-Ctrl] %s", reason)
+            return cls.Result(False, regime, confidence, reason)
+
+        # ── Allow ─────────────────────────────────────────────────────────
+        reason = (
+            f"Martingale ALLOWED — TRENDING regime, confidence={confidence}% "
+            f"(>= {cls.MIN_CONFIDENCE}% required): MG1 permitted"
+        )
+        logger.info("[MG-Ctrl] %s", reason)
+        return cls.Result(True, regime, confidence, reason)
+
+    @classmethod
+    def evaluate_from_df(
+        cls,
+        df,
+        lookback_candles: int = 80,
+    ) -> "MartingaleAdaptiveController.Result":
+        """
+        Convenience wrapper: detect regime from DataFrame then evaluate.
+
+        Args:
+            df:               enriched DataFrame (with EMA50, EMA200, ATR, RSI)
+            lookback_candles: passed through to detect_market_regime()
+
+        Returns:
+            MartingaleAdaptiveController.Result
+        """
+        try:
+            regime_report = detect_market_regime(df, lookback_candles=lookback_candles)
+        except Exception as exc:
+            logger.warning("[MG-Ctrl] Regime detection failed, blocking MG: %s", exc)
+            return cls.Result(
+                False, REGIME_SIDEWAYS, 0,
+                f"Martingale blocked — regime detection error: {exc}",
+            )
+        return cls.evaluate(regime_report)
+
+    @classmethod
+    def is_allowed(cls, regime_report: dict) -> bool:
+        """
+        Thin boolean shortcut.  Returns True iff martingale is permitted.
+
+        Args:
+            regime_report: dict from detect_market_regime()
+        """
+        return cls.evaluate(regime_report).allowed
+
+    @classmethod
+    def is_allowed_from_df(cls, df) -> bool:
+        """
+        Thin boolean shortcut using DataFrame directly.
+
+        Args:
+            df: enriched DataFrame
+        """
+        return cls.evaluate_from_df(df).allowed
+
+
+# ── Module-level singleton helper ─────────────────────────────────────────────
+martingale_controller = MartingaleAdaptiveController()
