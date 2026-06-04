@@ -444,6 +444,65 @@ def maybe_send_daily_signal_list():
 
     _daily_signal_list_sent_date = today
 
+_daily_swing_list_sent_date = None
+
+def maybe_send_daily_swing_signal_list():
+    """
+    Generate and send Swing Signals (15m-1H) to Telegram once per day at 10:05 AM IST.
+    """
+    global _daily_swing_list_sent_date
+
+    now = pd.Timestamp.now(tz="Asia/Kolkata")
+    today = now.date()
+
+    if _daily_swing_list_sent_date is not None and _daily_swing_list_sent_date != today:
+        _daily_swing_list_sent_date = None
+
+    if _daily_swing_list_sent_date == today:
+        return
+
+    # Trigger just after daily short-term (10:05 AM)
+    if now.hour < 10 or (now.hour == 10 and now.minute < 5):
+        return
+
+    from swing_signal_generator import generate_swing_signals
+    
+    logger.info("Triggering automated daily swing signal generation")
+    df_1h = cache.get_processed_dataframe("1h", get_data, add_indicators)
+    df_30m = cache.get_processed_dataframe("30min", get_data, add_indicators)
+    df_15m = cache.get_processed_dataframe("15min", get_data, add_indicators)
+    
+    swing_signals = generate_swing_signals(df_15m, df_30m, df_1h)
+    
+    if not swing_signals:
+        logger.info("No swing signals generated today.")
+        _daily_swing_list_sent_date = today
+        return
+        
+    lines = ["📊 TODAY SWING SIGNALS", ""]
+    
+    for sig in swing_signals:
+        lines.append("📈 SWING SIGNAL" if sig["direction"] == "CALL" else "📉 SWING SIGNAL")
+        lines.append("")
+        lines.append(f"EURUSD {sig['direction']}")
+        lines.append("")
+        lines.append(f"Entry: {sig['entry']}")
+        lines.append(f"Stop Loss: {sig['stop_loss']}")
+        lines.append(f"Target 1: {sig['target_1']}")
+        lines.append(f"Target 2: {sig['target_2']}")
+        lines.append("")
+        lines.append(f"Confidence: {sig['confidence']}%")
+        lines.append(f"Agreement: {sig['agreement']}")
+        lines.append(f"Regime: {sig['regime']}")
+        lines.append("")
+        lines.append("Expected Hold:")
+        lines.append("15m–1H+")
+        lines.append("──────────────")
+        
+    send_telegram("\n".join(lines))
+    _daily_swing_list_sent_date = today
+
+
 
 _eod_results_sent_date = None
 EOD_SEND_HOUR = 23
@@ -675,6 +734,7 @@ def run():
         try:
             # 0) Send daily signal list at 10:00 AM (once per day).
             maybe_send_daily_signal_list()
+            maybe_send_daily_swing_signal_list()
             maybe_send_eod_results()
 
             # 1) Update external signal list first.

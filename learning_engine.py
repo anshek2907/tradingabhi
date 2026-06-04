@@ -52,12 +52,14 @@ class LearningEngine:
         source: str = "telegram",
         regime: str = "UNKNOWN",
         probability_score: float = 0.0,
+        trade_type: str = "short_term",
     ):
         """
         Record winning/losing timings and conditions.
         result should be 'WIN' or 'LOSS'
         regime: market regime label at time of trade
         probability_score: centralized probability score at time of trade (0-100)
+        trade_type: 'short_term' or 'swing'
         """
         trade_data = {
             "timestamp":         datetime.now().isoformat(),
@@ -70,6 +72,7 @@ class LearningEngine:
             "source":            source,
             "regime":            regime,
             "probability_score": round(probability_score, 2),
+            "trade_type":        trade_type,
         }
         self.memory.append(trade_data)
         self._save_memory()
