@@ -5,11 +5,12 @@ import json
 
 from logger import logger
 from indicators import add_indicators
-from market_regime import _classify_live_market, REGIME_SIDEWAYS, REGIME_REVERSAL_HEAVY
+from market_regime import REGIME_SIDEWAYS, REGIME_REVERSAL_HEAVY
+from signal_generator import _classify_live_market
 from probability_engine import probability_engine, ProbabilityInputs, TIER_STRONG, TIER_MODERATE
 from agreement_engine import agreement_engine, AGREEMENT_SKIP
 from sequence_engine import sequence_engine, get_sequence_momentum_bonus
-from session_intelligence import session_intel, _session_strength
+from session_intelligence import session_intel
 from signal_generator import _analyse_probability_slot
 from market_structure import market_structure_engine
 
