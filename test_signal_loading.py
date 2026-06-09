@@ -1,4 +1,4 @@
-from datetime import datetime
+
 from signal_list import update_signal_list
 
 # Mock some telegram lines

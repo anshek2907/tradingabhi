@@ -142,6 +142,9 @@ class ProbabilityInputs:
     time_str:           str   = ""
     direction:          str   = ""
     market_structure:   Optional[any] = None  # MarketStructureResult
+    # Currency Strength confirmation (confirmation-only — never standalone)
+    currency_bias:            str   = "NEUTRAL"  # "CALL" | "PUT" | "NEUTRAL"
+    currency_strength_score:  float = 50.0       # bias_confidence 0–100
 
 
 @dataclass
@@ -423,6 +426,58 @@ class ProbabilityEngine:
                 regime_mult = min(1.15, regime_mult + 0.03)
             elif inputs.direction == "PUT" and ms.trend == "BEARISH" and not ms.near_opposing_liquidity:
                 regime_mult = min(1.15, regime_mult + 0.03)
+
+            # ── Liquidity Sweep Weight ────────────────────────────────────
+            # A confirmed sweep in the signal direction increases conviction
+            # for the reversal; an opposing strong sweep reduces it.
+            # Uses getattr for backward compatibility with older MarketStructureResult.
+            if getattr(ms, "has_strong_sweep", False):
+                if getattr(ms, "sweep_direction", None) == inputs.direction:
+                    # Strong sweep confirms our reversal direction → meaningful boost
+                    regime_mult = min(1.18, regime_mult + 0.06)
+                    logger.debug(
+                        "[ProbEng] Sweep boost +0.06 (strong %s sweep confirms %s)",
+                        ms.sweep_direction, inputs.direction,
+                    )
+                elif getattr(ms, "sweep_direction", None) and ms.sweep_direction != inputs.direction:
+                    # Strong opposing sweep → reduce confidence
+                    regime_mult = max(0.78, regime_mult - 0.04)
+                    logger.debug(
+                        "[ProbEng] Sweep penalty -0.04 (strong opposing %s sweep vs %s)",
+                        ms.sweep_direction, inputs.direction,
+                    )
+            elif getattr(ms, "sweep_result", None) is not None and getattr(ms.sweep_result, "detected", False):
+                sweep_conf = getattr(ms, "sweep_confidence", 0.0)
+                sweep_dir  = getattr(ms, "sweep_direction", None)
+                if sweep_dir == inputs.direction and sweep_conf >= 50.0:
+                    # Moderate sweep in our direction → small boost
+                    regime_mult = min(1.15, regime_mult + 0.03)
+                    logger.debug(
+                        "[ProbEng] Sweep boost +0.03 (moderate %s sweep conf=%.1f)",
+                        sweep_dir, sweep_conf,
+                    )
+
+        # ── Currency Strength Confirmation (confirmation-only) ───────────────────
+        # Max ±0.05 on regime_mult. Aligns as extra evidence but never overrides
+        # structure, momentum, or sweep signals.
+        cb   = inputs.currency_bias
+        cs   = inputs.currency_strength_score / 100.0  # normalised 0–1
+        if cb == inputs.direction:
+            # Strength confirms direction → boost proportional to confidence
+            cs_boost = 0.02 + cs * 0.03          # +0.02 (weak) to +0.05 (strong)
+            regime_mult = min(1.20, regime_mult + cs_boost)
+            logger.debug(
+                "[ProbEng] CurrStr boost +%.3f (bias=%s conf=%.1f confirms %s)",
+                cs_boost, cb, inputs.currency_strength_score, inputs.direction,
+            )
+        elif cb != "NEUTRAL" and cb != inputs.direction:
+            # Opposing currency strength → proportional small penalty
+            cs_penalty = cs * 0.03               # 0 (weak) to -0.03 (strong)
+            regime_mult = max(0.78, regime_mult - cs_penalty)
+            logger.debug(
+                "[ProbEng] CurrStr penalty -%.3f (bias=%s conf=%.1f opposes %s)",
+                cs_penalty, cb, inputs.currency_strength_score, inputs.direction,
+            )
 
         final_score = raw_pre_regime * regime_mult
         final_score = max(0.0, min(100.0, final_score))

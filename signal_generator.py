@@ -58,6 +58,177 @@ UNSTABLE_SIGNAL_GAP_MINUTES = 20
 # All routing via probability_engine.compute(ProbabilityInputs(...))
 _SCORE_TIERS = {TIER_STRONG: "STRONG", TIER_MODERATE: "MODERATE", TIER_SKIP: "SKIP"}
 
+
+# ── Signal Diagnostics ────────────────────────────────────────────────────────────
+# Stored after each generation run; consumed by bot.py for Telegram summary.
+from dataclasses import dataclass, field as dc_field
+
+# Rejection reason categories (used for grouping in the Telegram summary)
+REJECT_VOL_ZONE         = "vol_zone"
+REJECT_ATR_RATIO        = "atr_ratio"
+REJECT_PROB_SCORE       = "prob_score"
+REJECT_REVERSAL_HEAVY   = "reversal_heavy"
+REJECT_AGREEMENT        = "agreement"
+REJECT_LEARNING_VETO    = "learning_veto"
+REJECT_DB_STRENGTH      = "db_strength"
+REJECT_LIVE_CONF        = "live_confirmation"
+REJECT_ADJUSTED_CONF    = "adjusted_conf"
+REJECT_OTHER            = "other"
+
+_REJECT_CATEGORY_LABELS = {
+    REJECT_VOL_ZONE:       "Volatility Zone",
+    REJECT_ATR_RATIO:      "ATR Ratio",
+    REJECT_PROB_SCORE:     "Prob Score (regime floor)",
+    REJECT_REVERSAL_HEAVY: "Reversal-Heavy Gate",
+    REJECT_AGREEMENT:      "Agreement Engine",
+    REJECT_LEARNING_VETO:  "Learning Engine Veto",
+    REJECT_DB_STRENGTH:    "DB Strength + Confidence",
+    REJECT_LIVE_CONF:      "Live Confirmation",
+    REJECT_ADJUSTED_CONF:  "Adjusted Confidence Low",
+    REJECT_OTHER:          "Other",
+}
+
+
+@dataclass
+class SignalDiagnostics:
+    """
+    Captures full telemetry from one `calculate_recurring_strength()` run.
+    Stored in `_last_diagnostics` and consumed by bot.py for Telegram.
+    """
+    date:                  str   = ""
+    regime:                str   = ""
+    regime_confidence:     float = 0.0
+    currency_bias:         str   = "NEUTRAL"
+    currency_eur:          float = 50.0
+    currency_usd:          float = 50.0
+    sweep_detected:        bool  = False
+    sweep_direction:       str   = ""
+    generated_candidates:  int   = 0   # total slot × direction pairs evaluated
+    accepted_count:        int   = 0   # passed all gates
+    final_count:           int   = 0   # after cooldown + ranking
+    rejection_counts: dict = dc_field(default_factory=dict)  # {category: count}
+    rejection_details: list = dc_field(default_factory=list) # [(time,dir,reason)]
+    strong_count:      int  = 0
+    moderate_count:    int  = 0
+    avg_prob_score:    float = 0.0
+    top_times:         list = dc_field(default_factory=list)  # [(time, dir, score)]
+
+    def rejection_rate(self) -> float:
+        if self.generated_candidates == 0:
+            return 0.0
+        return round(
+            (self.generated_candidates - self.accepted_count)
+            / self.generated_candidates * 100, 1
+        )
+
+    def dominant_reject_reason(self) -> str:
+        if not self.rejection_counts:
+            return "None"
+        key = max(self.rejection_counts, key=self.rejection_counts.get)
+        return _REJECT_CATEGORY_LABELS.get(key, key)
+
+
+def _categorise_rejection(reason: str) -> str:
+    """Map a free-text rejection reason to a canonical category key."""
+    r = reason.lower()
+    if "vol_zone" in r:              return REJECT_VOL_ZONE
+    if "atr_ratio" in r:             return REJECT_ATR_RATIO
+    if "prob_score" in r or "regime_floor" in r: return REJECT_PROB_SCORE
+    if "reversal-heavy" in r:        return REJECT_REVERSAL_HEAVY
+    if "agreement" in r:             return REJECT_AGREEMENT
+    if "learning veto" in r:         return REJECT_LEARNING_VETO
+    if "db strength" in r:           return REJECT_DB_STRENGTH
+    if "live confirmation" in r:     return REJECT_LIVE_CONF
+    if "adjusted_conf" in r:         return REJECT_ADJUSTED_CONF
+    return REJECT_OTHER
+
+
+# Module-level store: set by calculate_recurring_strength(), read by bot.py
+_last_diagnostics: SignalDiagnostics | None = None
+
+
+def get_last_diagnostics() -> "SignalDiagnostics | None":
+    """Return the diagnostics from the most recent generation run, or None."""
+    return _last_diagnostics
+
+
+def format_diagnostic_summary(d: "SignalDiagnostics") -> str:
+    """
+    Format a Telegram-ready diagnostic summary for one generation run.
+    Shows the full funnel: candidates → accepted → final, rejection
+    breakdown by category, and top signals by probability score.
+    """
+    lines: list[str] = []
+    sep = "━" * 26
+
+    # ── Header ───────────────────────────────────────────────────────────
+    lines.append(sep)
+    lines.append("\U0001f4ca *Signal Diagnostics* — " + d.date)
+    lines.append(sep)
+
+    # ── Market context ───────────────────────────────────────────────
+    regime_conf_pct = int(d.regime_confidence)
+    lines.append(f"Regime: *{d.regime}* ({regime_conf_pct}% conf)")
+    # Currency strength
+    bias_arrow = "↑" if d.currency_bias == "CALL" else "↓" if d.currency_bias == "PUT" else "→"
+    lines.append(
+        f"Currency: EUR={d.currency_eur:.1f} USD={d.currency_usd:.1f} {bias_arrow}{d.currency_bias}"
+    )
+    # Sweep
+    if d.sweep_detected:
+        lines.append(f"Sweep: \U0001f30a {d.sweep_direction} detected")
+    else:
+        lines.append("Sweep: None")
+
+    lines.append("")
+
+    # ── Signal funnel ──────────────────────────────────────────────────
+    rejected_count = d.generated_candidates - d.accepted_count
+    lines.append("*Signal Funnel*")
+    lines.append(f"  Generated candidates : {d.generated_candidates}")
+    lines.append(f"  Passed all gates     : {d.accepted_count}")
+    lines.append(f"  Rejected             : {rejected_count} ({d.rejection_rate()}%)")
+    lines.append(f"  Final (post-rank)    : *{d.final_count}*")
+    if d.accepted_count > 0:
+        lines.append(f"  Avg prob score       : {d.avg_prob_score:.1f}")
+        strong_pct = int(d.strong_count / d.accepted_count * 100)
+        lines.append(f"  STRONG / MODERATE    : {d.strong_count} / {d.moderate_count} ({strong_pct}% strong)")
+
+    lines.append("")
+
+    # ── Rejection breakdown ────────────────────────────────────────────
+    if d.rejection_counts:
+        lines.append("*Rejection Breakdown*")
+        sorted_rejects = sorted(d.rejection_counts.items(), key=lambda x: x[1], reverse=True)
+        for cat_key, count in sorted_rejects:
+            label = _REJECT_CATEGORY_LABELS.get(cat_key, cat_key)
+            bar = "█" * min(10, count)
+            lines.append(f"  {label}: {count} {bar}")
+        lines.append(f"  [Dominant filter: {d.dominant_reject_reason()}]")
+        lines.append("")
+
+    # ── Top 3 accepted signals (by prob score) ─────────────────────────
+    if d.top_times:
+        lines.append("*Top Accepted Signals*")
+        for t, direction, score in d.top_times[:3]:
+            emoji = "\U0001f4c8" if direction == "CALL" else "\U0001f4c9"
+            lines.append(f"  {emoji} {t} {direction} — prob={score:.1f}")
+        lines.append("")
+
+    # ── Over-filtering alert ───────────────────────────────────────────
+    if d.final_count == 0:
+        lines.append("\u26a0\ufe0f *ALERT: 0 signals today — check thresholds*")
+    elif d.rejection_rate() > 90:
+        lines.append(
+            f"\u26a0\ufe0f *High rejection rate {d.rejection_rate()}%* — "
+            f"possible over-filtering via {d.dominant_reject_reason()}"
+        )
+    elif d.final_count >= 3:
+        lines.append(f"\u2705 Quality: {d.final_count} signals passed (≥ 3 target)")
+
+    lines.append(sep)
+    return "\n".join(lines)
+
 # Load API key
 if os.getenv("RAILWAY_ENVIRONMENT"):
     from config_prod import TD_API_KEY
@@ -508,13 +679,7 @@ def _calculate_recurring_strength_legacy(df: pd.DataFrame) -> list[dict]:
         )
 
 
-    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
-    logger.info(f"Generated candidates: {generated_candidates_count}")
-    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
-    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
-    for r in rejected_signals_list:
-        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
-    logger.info(f"Final signal count: {len(final)}\n")
+
 
     return final
 
@@ -595,13 +760,7 @@ def _select_balanced(
                 )
 
 
-    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
-    logger.info(f"Generated candidates: {generated_candidates_count}")
-    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
-    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
-    for r in rejected_signals_list:
-        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
-    logger.info(f"Final signal count: {len(final)}\n")
+
 
     return final
 
@@ -910,13 +1069,7 @@ def _select_ranked_with_cooldown(candidates: list[dict], total_target: int) -> l
         logger.warning(f"Only {len(final)} generated timings passed quality filters today.")
 
 
-    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
-    logger.info(f"Generated candidates: {generated_candidates_count}")
-    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
-    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
-    for r in rejected_signals_list:
-        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
-    logger.info(f"Final signal count: {len(final)}\n")
+
 
     return final
 
@@ -977,6 +1130,34 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
     # ── Step 1.5: Market Structure ───────────────────────
     from market_structure import market_structure_engine
     market_structure = market_structure_engine.analyse(df)
+
+    # Log sweep detections for the main pipeline
+    if market_structure.has_strong_sweep:
+        logger.info(
+            "🌊 STRONG SWEEP DETECTED [signal_gen]: dir=%s | conf=%.1f | %s",
+            market_structure.sweep_direction,
+            market_structure.sweep_confidence,
+            market_structure.sweep_result.sweep_summary if market_structure.sweep_result else "",
+        )
+    elif market_structure.sweep_result and market_structure.sweep_result.detected:
+        logger.info(
+            "〰️ Moderate sweep [signal_gen]: dir=%s | conf=%.1f",
+            market_structure.sweep_direction,
+            market_structure.sweep_confidence,
+        )
+    # ── Step 1.6: Currency Strength ─────────────────────────────────
+    # Computed once per run (cached 30 min). Uses Tier 2 basket if API key
+    # is available, otherwise Tier 1 (df only). Confirmation-only — never
+    # generates a signal alone; only modifies regime_mult in ProbabilityEngine.
+    from currency_strength import currency_strength_engine
+    currency_strength_engine.invalidate_cache()  # fresh result each daily run
+    cs_result = currency_strength_engine.compute(df, api_key=TD_API_KEY)
+    logger.info(
+        "💱 Currency Strength: EUR=%.1f USD=%.1f bias=%s conf=%.1f tier=%s method=%s",
+        cs_result.eur_strength, cs_result.usd_strength,
+        cs_result.bias, cs_result.bias_confidence,
+        cs_result.tier, cs_result.method,
+    )
 
     # ATR median for volatility zone classification
     atr_market_median = float(
@@ -1069,6 +1250,8 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 time_str              = ist_time_str,
                 direction             = direction,
                 market_structure      = market_structure,
+                currency_bias         = cs_result.bias,
+                currency_strength_score = cs_result.bias_confidence,
             )
             # Use dynamic voter weights (auto-fetches from strategy_weight_tracker)
             prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
@@ -1251,6 +1434,16 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
                 "generated_date":                 today_ist,
                 "timezone":                       "Asia/Kolkata",
                 "source":                         "generated",
+                # ── Liquidity Sweep ───────────────────────────────
+                "liquidity_sweep":                market_structure.sweep_direction or "NONE",
+                "sweep_confidence":               round(market_structure.sweep_confidence, 1),
+                "has_strong_sweep":               market_structure.has_strong_sweep,
+                # ── Currency Strength ─────────────────────────────
+                "currency_bias":                  cs_result.bias,
+                "currency_eur_strength":          round(cs_result.eur_strength, 1),
+                "currency_usd_strength":          round(cs_result.usd_strength, 1),
+                "currency_strength_score":        round(cs_result.bias_confidence, 1),
+                "currency_strength_tier":         cs_result.tier,
             })
 
     # ── Rank and select (adaptive count within target_min–target_max) ───
@@ -1287,14 +1480,72 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
             signal.get("volatility_zone", "?"),
         )
 
+    # ── Build & store SignalDiagnostics ──────────────────────────────────
+    global _last_diagnostics
+    try:
+        # Rejection counts by category
+        reject_counts: dict[str, int] = {}
+        for _t, _d, _reason in rejected_signals_list:
+            cat = _categorise_rejection(_reason)
+            reject_counts[cat] = reject_counts.get(cat, 0) + 1
 
-    logger.info(f"\n--- Signal Generation Summary ({today_ist}) ---")
-    logger.info(f"Generated candidates: {generated_candidates_count}")
-    logger.info(f"Accepted signals: {len(accepted_signals_list)}")
-    logger.info(f"Rejected signals: {len(rejected_signals_list)}")
+        # Accepted signal quality stats
+        _accepted_scores = [
+            s.get("probability_score", 0.0) for s in candidates
+        ]
+        _avg_score = round(sum(_accepted_scores) / len(_accepted_scores), 1) if _accepted_scores else 0.0
+        _strong_n  = sum(1 for s in candidates if s.get("signal_tier") == TIER_STRONG)
+        _mod_n     = sum(1 for s in candidates if s.get("signal_tier") == TIER_MODERATE)
+
+        # Top 5 by prob score for the Telegram message
+        _top = sorted(
+            [(s["time"], s["direction"], s.get("probability_score", 0.0)) for s in candidates],
+            key=lambda x: x[2], reverse=True,
+        )[:5]
+
+        _last_diagnostics = SignalDiagnostics(
+            date                = today_ist,
+            regime              = regime,
+            regime_confidence   = float(regime_confidence),
+            currency_bias       = cs_result.bias,
+            currency_eur        = cs_result.eur_strength,
+            currency_usd        = cs_result.usd_strength,
+            sweep_detected      = bool(market_structure.has_strong_sweep or (
+                market_structure.sweep_result and market_structure.sweep_result.detected
+            )),
+            sweep_direction     = market_structure.sweep_direction or "",
+            generated_candidates= generated_candidates_count,
+            accepted_count      = len(accepted_signals_list),
+            final_count         = len(final),
+            rejection_counts    = reject_counts,
+            rejection_details   = list(rejected_signals_list),
+            strong_count        = _strong_n,
+            moderate_count      = _mod_n,
+            avg_prob_score      = _avg_score,
+            top_times           = _top,
+        )
+        logger.debug("[Diagnostics] Stored: %s", _last_diagnostics)
+    except Exception as _diag_err:
+        logger.warning("[Diagnostics] Failed to build diagnostics (non-critical): %s", _diag_err)
+
+    # ── Summary log ────────────────────────────────────────────────────────
+    logger.info(
+        "\n--- Signal Generation Summary (%s) ---\n"
+        "  Generated candidates : %d\n"
+        "  Accepted (all gates) : %d\n"
+        "  Rejected             : %d (%.1f%%)\n"
+        "  Final (post-rank)    : %d\n"
+        "  Dominant reject gate : %s",
+        today_ist,
+        generated_candidates_count,
+        len(accepted_signals_list),
+        len(rejected_signals_list),
+        (_last_diagnostics.rejection_rate() if _last_diagnostics else 0.0),
+        len(final),
+        (_last_diagnostics.dominant_reject_reason() if _last_diagnostics else "N/A"),
+    )
     for r in rejected_signals_list:
-        logger.debug(f"Rejected {r[0]} {r[1]} -> {r[2]}")
-    logger.info(f"Final signal count: {len(final)}\n")
+        logger.debug("  Rejected %s %s → %s", r[0], r[1], r[2])
 
     return final
 

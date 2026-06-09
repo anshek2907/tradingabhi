@@ -508,6 +508,69 @@ _eod_results_sent_date = None
 EOD_SEND_HOUR = 23
 EOD_SEND_MINUTE = 30
 
+
+# ==============================
+# DAILY DIAGNOSTICS SUMMARY
+# ==============================
+
+_daily_diagnostics_sent_date = None
+DIAGNOSTICS_SEND_HOUR   = 10
+DIAGNOSTICS_SEND_MINUTE = 10   # 10:10 AM IST — after signal list (10:00) and swing (10:05)
+
+
+def maybe_send_daily_diagnostics():
+    """
+    Send the Signal Diagnostics summary to Telegram once per day at 10:10 AM IST.
+
+    Reads the `SignalDiagnostics` object stored by `calculate_recurring_strength()`
+    after the daily generation run. Shows the full filter funnel, rejection
+    breakdown, currency strength, sweep state, and over-filtering alerts.
+
+    Purpose: monitor signal quality and detect over-filtering without reading logs.
+    """
+    global _daily_diagnostics_sent_date
+
+    now   = pd.Timestamp.now(tz="Asia/Kolkata")
+    today = now.date()
+
+    if _daily_diagnostics_sent_date is not None and _daily_diagnostics_sent_date != today:
+        _daily_diagnostics_sent_date = None
+
+    if _daily_diagnostics_sent_date == today:
+        return
+
+    if now.hour < DIAGNOSTICS_SEND_HOUR or (
+        now.hour == DIAGNOSTICS_SEND_HOUR and now.minute < DIAGNOSTICS_SEND_MINUTE
+    ):
+        return
+
+    try:
+        from signal_generator import get_last_diagnostics, format_diagnostic_summary
+        d = get_last_diagnostics()
+
+        if d is None:
+            logger.info("[Diagnostics] No diagnostics available yet — skipping Telegram send")
+            _daily_diagnostics_sent_date = today
+            return
+
+        # Only send if diagnostics are from today
+        if d.date != today.isoformat():
+            logger.info(
+                "[Diagnostics] Last diagnostics date %s ≠ today %s — skipping",
+                d.date, today.isoformat(),
+            )
+            _daily_diagnostics_sent_date = today
+            return
+
+        msg = format_diagnostic_summary(d)
+        logger.info("[Diagnostics] Sending daily diagnostics to Telegram")
+        send_telegram(msg)
+
+    except Exception as e:
+        logger.error("[Diagnostics] Failed to send diagnostics: %s", e)
+
+    _daily_diagnostics_sent_date = today
+
 def maybe_send_eod_results():
     global _eod_results_sent_date
 
@@ -735,6 +798,7 @@ def run():
             # 0) Send daily signal list at 10:00 AM (once per day).
             maybe_send_daily_signal_list()
             maybe_send_daily_swing_signal_list()
+            maybe_send_daily_diagnostics()   # 10:10 AM — signal quality summary
             maybe_send_eod_results()
 
             # 1) Update external signal list first.

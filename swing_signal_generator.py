@@ -114,12 +114,38 @@ def generate_swing_signals(
         
     # 4.5 Market Structure & Liquidity
     market_structure = market_structure_engine.analyse(df_1h)
+
+    # Log sweep detections
+    if market_structure.has_strong_sweep:
+        logger.info(
+            "🌊 STRONG SWEEP DETECTED: dir=%s | conf=%.1f | %s",
+            market_structure.sweep_direction,
+            market_structure.sweep_confidence,
+            market_structure.sweep_result.sweep_summary if market_structure.sweep_result else "",
+        )
+    elif market_structure.sweep_result and market_structure.sweep_result.detected:
+        logger.info(
+            "〰️ Moderate sweep detected: dir=%s | conf=%.1f",
+            market_structure.sweep_direction,
+            market_structure.sweep_confidence,
+        )
+
     if direction == "CALL" and market_structure.trend == "BEARISH" and market_structure.recent_choch == "PUT":
-        logger.debug(f"Swing Engine: Rejecting due to bearish 1H structure CHOCH.")
+        logger.debug("Swing Engine: Rejecting due to bearish 1H structure CHOCH.")
         return signals
     if direction == "PUT" and market_structure.trend == "BULLISH" and market_structure.recent_choch == "CALL":
-        logger.debug(f"Swing Engine: Rejecting due to bullish 1H structure CHOCH.")
+        logger.debug("Swing Engine: Rejecting due to bullish 1H structure CHOCH.")
         return signals
+
+    # 4.6 Currency Strength (Tier 1 — df only, no extra API calls in live swing path)
+    from currency_strength import currency_strength_engine
+    cs_result = currency_strength_engine.compute(df_1h, api_key=None)
+    if cs_result.bias != "NEUTRAL":
+        logger.info(
+            "💱 CurrStr [swing]: EUR=%.1f USD=%.1f bias=%s conf=%.1f",
+            cs_result.eur_strength, cs_result.usd_strength,
+            cs_result.bias, cs_result.bias_confidence,
+        )
 
     # 5. Sequence & Probability Engine
     seq_result = sequence_engine.analyse(df_15m, direction_hint=direction, market_structure=market_structure)
@@ -140,6 +166,8 @@ def generate_swing_signals(
         time_str              = time_str,
         direction             = direction,
         market_structure      = market_structure,
+        currency_bias         = cs_result.bias,
+        currency_strength_score = cs_result.bias_confidence,
     )
     prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
     
@@ -176,9 +204,28 @@ def generate_swing_signals(
         "confidence": int(prob_result.probability_score),
         "agreement": f"{agreement.agreement_score}/{agreement.total_voters}",
         "regime": regime,
-        "time": time_str
+        "time": time_str,
+        # Liquidity sweep metadata
+        "liquidity_sweep":    market_structure.sweep_direction or "NONE",
+        "sweep_confidence":   round(market_structure.sweep_confidence, 1),
+        "has_strong_sweep":   market_structure.has_strong_sweep,
+        # Currency Strength metadata
+        "currency_bias":      cs_result.bias,
+        "currency_eur":       round(cs_result.eur_strength, 1),
+        "currency_usd":       round(cs_result.usd_strength, 1),
+        "currency_conf":      round(cs_result.bias_confidence, 1),
     }
-    
+
     signals.append(signal)
-    logger.info(f"🟢 SWING GENERATED: {direction} | Conf: {signal['confidence']}% | Agr: {signal['agreement']} | Reg: {regime}")
+    logger.info(
+        "🟢 SWING GENERATED: %s | Conf: %s%% | Agr: %s | Reg: %s | Sweep: %s | CurrStr: %s (EUR=%.1f USD=%.1f)",
+        direction,
+        signal["confidence"],
+        signal["agreement"],
+        regime,
+        signal["liquidity_sweep"],
+        cs_result.bias,
+        cs_result.eur_strength,
+        cs_result.usd_strength,
+    )
     return signals

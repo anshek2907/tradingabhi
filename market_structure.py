@@ -8,6 +8,7 @@ Detects:
 - Break Of Structure (BOS)
 - Change Of Character (CHOCH)
 - Liquidity Zones: PDH, PDL, Weekly High, Weekly Low, Major swing highs/lows
+- Liquidity Sweeps: BSL, SSL, PDH/PDL/WH/WL sweeps (via liquidity_sweep module)
 """
 from dataclasses import dataclass, field
 import pandas as pd
@@ -15,6 +16,7 @@ from typing import Optional
 import numpy as np
 
 from logger import logger
+from liquidity_sweep import detect_liquidity_sweeps, LiquiditySweepResult
 
 @dataclass
 class MarketStructureResult:
@@ -25,6 +27,11 @@ class MarketStructureResult:
     distance_to_pdl: float = 999.0
     near_opposing_liquidity: bool = False
     liquidity_zones: dict = field(default_factory=dict)
+    # ── Liquidity Sweep fields ─────────────────────────────────────────────
+    sweep_result: Optional[LiquiditySweepResult] = None  # full sweep analysis
+    sweep_direction: Optional[str] = None   # "CALL" | "PUT" | None
+    sweep_confidence: float = 0.0           # 0–100
+    has_strong_sweep: bool = False          # True if any strong sweep detected
     
 class MarketStructureEngine:
     def __init__(self, pivot_left=5, pivot_right=5, proximity_threshold_pips=5.0):
@@ -129,6 +136,11 @@ class MarketStructureEngine:
             if pdl and abs(distance_to_pdl) < self.proximity_threshold_pips:
                 near_opposing = True
                 
+        zones = {"PDH": pdh, "PDL": pdl, "WH": wh, "WL": wl}
+
+        # ── Liquidity Sweep Detection ──────────────────────────────────────
+        sweep_result = detect_liquidity_sweeps(df, zones)
+
         return MarketStructureResult(
             trend=trend,
             recent_bos=bos,
@@ -136,7 +148,11 @@ class MarketStructureEngine:
             distance_to_pdh=abs(distance_to_pdh),
             distance_to_pdl=abs(distance_to_pdl),
             near_opposing_liquidity=near_opposing,
-            liquidity_zones={"PDH": pdh, "PDL": pdl, "WH": wh, "WL": wl}
+            liquidity_zones=zones,
+            sweep_result=sweep_result,
+            sweep_direction=sweep_result.dominant_direction if sweep_result.detected else None,
+            sweep_confidence=sweep_result.sweep_confidence,
+            has_strong_sweep=sweep_result.has_strong_sweep,
         )
 
 market_structure_engine = MarketStructureEngine()

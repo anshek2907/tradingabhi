@@ -1,0 +1,26 @@
+{
+  "weights": {
+    "win_rate": 0.315,
+    "direction_consistency": 0.25,
+    "atr_quality": 0.12,
+    "momentum_strength": 0.15,
+    "session_strength": 0.08,
+    "volatility_quality": 0.085,
+    "reversal_risk": 0.06
+  },
+  "baseline_weights": {
+    "win_rate": 0.32,
+    "direction_consistency": 0.25,
+    "atr_quality": 0.12,
+    "momentum_strength": 0.15,
+    "session_strength": 0.08,
+    "volatility_quality": 0.08,
+    "reversal_risk": 0.06
+  },
+  "last_updated": "2026-06-09",
+  "last_backtest_wr": 46.4,
+  "last_backtest_cont": 47.02,
+  "last_backtest_rev_fail": 48.75,
+  "last_backtest_vol": 86.7,
+  "adjustments_applied": 2
+}

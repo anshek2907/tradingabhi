@@ -17,7 +17,7 @@ from persistence import safe_load_json, safe_save_json
 from market_safety import run_market_safety, check_high_impact_news, check_dangerous_volatility, check_atr_floor
 from confirmation_engine import validate_live_signal
 from signal_generator import decide_direction_live
-from learning_engine import learning_engine
+from learning_engine import learning_engine, record_voter_outcome, record_session_outcome
 from market_regime import detect_market_regime, MartingaleAdaptiveController
 
 try:
@@ -1749,15 +1749,26 @@ def process_signal_list(
 
                 # Feed learning engine (per source)
                 try:
+                    time_str = entry["signal_time"].strftime("%H:%M") if isinstance(entry["signal_time"], datetime) else str(entry["signal_time"])
                     learning_engine.record_trade(
-                        time_of_day=entry["signal_time"].strftime("%H:%M") if isinstance(entry["signal_time"], datetime) else str(entry["signal_time"]),
+                        time_of_day=time_str,
                         direction=entry.get("direction", "CALL"),
                         confidence=int(entry.get("confidence") or 0),
                         atr=float(entry.get("atr") or 0),
                         rsi=float(entry.get("rsi") or 50),
                         result=entry["result"],
                         source=entry.get("source", "telegram"),
+                        regime=entry.get("regime", "UNKNOWN"),
+                        probability_score=float(entry.get("probability_score", 0.0))
                     )
+                    
+                    if "agreement_votes" in entry:
+                        record_voter_outcome(entry["agreement_votes"], entry["result"], entry.get("direction", "CALL"))
+                        
+                    if isinstance(entry["signal_time"], datetime):
+                        ist_minutes = entry["signal_time"].hour * 60 + entry["signal_time"].minute
+                        record_session_outcome(ist_minutes, entry.get("direction", "CALL"), entry["result"])
+                        
                 except Exception as le:
                     logger.error(f"LearningEngine record error: {le}")
 

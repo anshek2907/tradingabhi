@@ -1,0 +1,88 @@
+{
+  "voters": {
+    "EMA_Trend": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "RSI_Momentum": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Pattern_Engine": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Probability_Score": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Market_Regime": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Volatility_Clustering": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Live_Confirmation": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Momentum_Continuation": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    },
+    "Sequence_Pattern": {
+      "multiplier": 1.0,
+      "rolling_win_rate": 50.0,
+      "window_size": 0,
+      "total_predictions": 0,
+      "last_updated": "",
+      "history": []
+    }
+  },
+  "last_saved": "2026-06-09T13:27:48.663575",
+  "all_voters": [
+    "EMA_Trend",
+    "RSI_Momentum",
+    "Pattern_Engine",
+    "Probability_Score",
+    "Market_Regime",
+    "Volatility_Clustering",
+    "Live_Confirmation",
+    "Momentum_Continuation",
+    "Sequence_Pattern"
+  ]
+}

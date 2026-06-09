@@ -1,0 +1,6324 @@
+{
+  "13:00|CALL": {
+    "time": "13:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:00|PUT": {
+    "time": "13:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:05|CALL": {
+    "time": "13:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:05|PUT": {
+    "time": "13:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:10|CALL": {
+    "time": "13:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:10|PUT": {
+    "time": "13:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:15|CALL": {
+    "time": "13:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:15|PUT": {
+    "time": "13:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:20|CALL": {
+    "time": "13:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:20|PUT": {
+    "time": "13:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:25|CALL": {
+    "time": "13:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:25|PUT": {
+    "time": "13:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:30|CALL": {
+    "time": "13:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:30|PUT": {
+    "time": "13:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:35|CALL": {
+    "time": "13:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:35|PUT": {
+    "time": "13:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:40|CALL": {
+    "time": "13:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:40|PUT": {
+    "time": "13:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:45|CALL": {
+    "time": "13:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:45|PUT": {
+    "time": "13:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:50|CALL": {
+    "time": "13:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:50|PUT": {
+    "time": "13:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 5,
+    "historical_success_rate": 7.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:55|CALL": {
+    "time": "13:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "13:55|PUT": {
+    "time": "13:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:00|CALL": {
+    "time": "14:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 5,
+    "historical_success_rate": 7.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:00|PUT": {
+    "time": "14:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:05|CALL": {
+    "time": "14:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:05|PUT": {
+    "time": "14:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:10|CALL": {
+    "time": "14:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:10|PUT": {
+    "time": "14:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:15|CALL": {
+    "time": "14:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:15|PUT": {
+    "time": "14:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:20|CALL": {
+    "time": "14:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:20|PUT": {
+    "time": "14:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:25|CALL": {
+    "time": "14:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:25|PUT": {
+    "time": "14:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:30|CALL": {
+    "time": "14:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:30|PUT": {
+    "time": "14:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:35|CALL": {
+    "time": "14:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:35|PUT": {
+    "time": "14:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:40|CALL": {
+    "time": "14:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:40|PUT": {
+    "time": "14:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:45|CALL": {
+    "time": "14:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:45|PUT": {
+    "time": "14:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:50|CALL": {
+    "time": "14:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:50|PUT": {
+    "time": "14:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:55|CALL": {
+    "time": "14:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "14:55|PUT": {
+    "time": "14:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:00|CALL": {
+    "time": "15:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:00|PUT": {
+    "time": "15:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:05|CALL": {
+    "time": "15:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:05|PUT": {
+    "time": "15:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:10|CALL": {
+    "time": "15:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:10|PUT": {
+    "time": "15:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:15|CALL": {
+    "time": "15:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:15|PUT": {
+    "time": "15:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:20|CALL": {
+    "time": "15:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:20|PUT": {
+    "time": "15:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:25|CALL": {
+    "time": "15:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:25|PUT": {
+    "time": "15:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:30|CALL": {
+    "time": "15:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:30|PUT": {
+    "time": "15:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:35|CALL": {
+    "time": "15:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:35|PUT": {
+    "time": "15:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:40|CALL": {
+    "time": "15:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:40|PUT": {
+    "time": "15:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:45|CALL": {
+    "time": "15:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:45|PUT": {
+    "time": "15:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:50|CALL": {
+    "time": "15:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:50|PUT": {
+    "time": "15:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:55|CALL": {
+    "time": "15:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "15:55|PUT": {
+    "time": "15:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:00|CALL": {
+    "time": "16:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:00|PUT": {
+    "time": "16:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:05|CALL": {
+    "time": "16:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:05|PUT": {
+    "time": "16:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:10|CALL": {
+    "time": "16:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:10|PUT": {
+    "time": "16:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:15|CALL": {
+    "time": "16:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:15|PUT": {
+    "time": "16:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:20|CALL": {
+    "time": "16:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:20|PUT": {
+    "time": "16:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:25|CALL": {
+    "time": "16:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:25|PUT": {
+    "time": "16:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:30|CALL": {
+    "time": "16:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:30|PUT": {
+    "time": "16:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:35|CALL": {
+    "time": "16:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:35|PUT": {
+    "time": "16:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:40|CALL": {
+    "time": "16:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:40|PUT": {
+    "time": "16:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:45|CALL": {
+    "time": "16:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:45|PUT": {
+    "time": "16:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:50|CALL": {
+    "time": "16:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:50|PUT": {
+    "time": "16:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:55|CALL": {
+    "time": "16:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "16:55|PUT": {
+    "time": "16:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:00|CALL": {
+    "time": "17:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:00|PUT": {
+    "time": "17:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:05|CALL": {
+    "time": "17:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:05|PUT": {
+    "time": "17:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:10|CALL": {
+    "time": "17:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:10|PUT": {
+    "time": "17:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:15|CALL": {
+    "time": "17:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:15|PUT": {
+    "time": "17:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:20|CALL": {
+    "time": "17:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:20|PUT": {
+    "time": "17:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:25|CALL": {
+    "time": "17:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:25|PUT": {
+    "time": "17:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:30|CALL": {
+    "time": "17:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 70,
+    "historical_success_rate": 92.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:30|PUT": {
+    "time": "17:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 5,
+    "historical_success_rate": 7.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:35|CALL": {
+    "time": "17:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:35|PUT": {
+    "time": "17:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:40|CALL": {
+    "time": "17:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:40|PUT": {
+    "time": "17:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:45|CALL": {
+    "time": "17:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:45|PUT": {
+    "time": "17:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:50|CALL": {
+    "time": "17:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:50|PUT": {
+    "time": "17:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:55|CALL": {
+    "time": "17:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "17:55|PUT": {
+    "time": "17:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:00|CALL": {
+    "time": "18:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:00|PUT": {
+    "time": "18:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:05|CALL": {
+    "time": "18:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:05|PUT": {
+    "time": "18:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:10|CALL": {
+    "time": "18:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:10|PUT": {
+    "time": "18:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:15|CALL": {
+    "time": "18:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:15|PUT": {
+    "time": "18:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:20|CALL": {
+    "time": "18:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:20|PUT": {
+    "time": "18:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:25|CALL": {
+    "time": "18:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:25|PUT": {
+    "time": "18:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:30|CALL": {
+    "time": "18:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:30|PUT": {
+    "time": "18:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:35|CALL": {
+    "time": "18:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:35|PUT": {
+    "time": "18:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:40|CALL": {
+    "time": "18:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:40|PUT": {
+    "time": "18:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:45|CALL": {
+    "time": "18:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:45|PUT": {
+    "time": "18:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:50|CALL": {
+    "time": "18:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:50|PUT": {
+    "time": "18:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:55|CALL": {
+    "time": "18:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "18:55|PUT": {
+    "time": "18:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:00|CALL": {
+    "time": "19:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:00|PUT": {
+    "time": "19:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:05|CALL": {
+    "time": "19:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:05|PUT": {
+    "time": "19:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:10|CALL": {
+    "time": "19:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:10|PUT": {
+    "time": "19:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:15|CALL": {
+    "time": "19:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:15|PUT": {
+    "time": "19:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:20|CALL": {
+    "time": "19:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:20|PUT": {
+    "time": "19:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:25|CALL": {
+    "time": "19:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:25|PUT": {
+    "time": "19:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:30|CALL": {
+    "time": "19:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:30|PUT": {
+    "time": "19:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:35|CALL": {
+    "time": "19:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:35|PUT": {
+    "time": "19:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:40|CALL": {
+    "time": "19:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:40|PUT": {
+    "time": "19:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:45|CALL": {
+    "time": "19:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:45|PUT": {
+    "time": "19:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 11,
+    "historical_success_rate": 14.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:50|CALL": {
+    "time": "19:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:50|PUT": {
+    "time": "19:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:55|CALL": {
+    "time": "19:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "19:55|PUT": {
+    "time": "19:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:00|CALL": {
+    "time": "20:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:00|PUT": {
+    "time": "20:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:05|CALL": {
+    "time": "20:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 70,
+    "historical_success_rate": 92.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:05|PUT": {
+    "time": "20:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 0,
+    "historical_success_rate": 0.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:10|CALL": {
+    "time": "20:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 64,
+    "historical_success_rate": 85.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:10|PUT": {
+    "time": "20:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 5,
+    "historical_success_rate": 7.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:15|CALL": {
+    "time": "20:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:15|PUT": {
+    "time": "20:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:20|CALL": {
+    "time": "20:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:20|PUT": {
+    "time": "20:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:25|CALL": {
+    "time": "20:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:25|PUT": {
+    "time": "20:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:30|CALL": {
+    "time": "20:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:30|PUT": {
+    "time": "20:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:35|CALL": {
+    "time": "20:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:35|PUT": {
+    "time": "20:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:40|CALL": {
+    "time": "20:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:40|PUT": {
+    "time": "20:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:45|CALL": {
+    "time": "20:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 70,
+    "historical_success_rate": 92.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:45|PUT": {
+    "time": "20:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 5,
+    "historical_success_rate": 7.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:50|CALL": {
+    "time": "20:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 54,
+    "historical_success_rate": 71.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:50|PUT": {
+    "time": "20:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:55|CALL": {
+    "time": "20:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "20:55|PUT": {
+    "time": "20:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:00|CALL": {
+    "time": "21:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:00|PUT": {
+    "time": "21:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:05|CALL": {
+    "time": "21:05",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:05|PUT": {
+    "time": "21:05",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:10|CALL": {
+    "time": "21:10",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:10|PUT": {
+    "time": "21:10",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:15|CALL": {
+    "time": "21:15",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:15|PUT": {
+    "time": "21:15",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:20|CALL": {
+    "time": "21:20",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:20|PUT": {
+    "time": "21:20",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:25|CALL": {
+    "time": "21:25",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:25|PUT": {
+    "time": "21:25",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:30|CALL": {
+    "time": "21:30",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:30|PUT": {
+    "time": "21:30",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:35|CALL": {
+    "time": "21:35",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 43,
+    "historical_success_rate": 57.1,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:35|PUT": {
+    "time": "21:35",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 32,
+    "historical_success_rate": 42.9,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:40|CALL": {
+    "time": "21:40",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:40|PUT": {
+    "time": "21:40",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 21,
+    "historical_success_rate": 28.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:45|CALL": {
+    "time": "21:45",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 59,
+    "historical_success_rate": 78.6,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:45|PUT": {
+    "time": "21:45",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:50|CALL": {
+    "time": "21:50",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:50|PUT": {
+    "time": "21:50",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 27,
+    "historical_success_rate": 35.7,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:55|CALL": {
+    "time": "21:55",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "21:55|PUT": {
+    "time": "21:55",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 38,
+    "historical_success_rate": 50.0,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "22:00|CALL": {
+    "time": "22:00",
+    "direction": "CALL",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 48,
+    "historical_success_rate": 64.3,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  },
+  "22:00|PUT": {
+    "time": "22:00",
+    "direction": "PUT",
+    "total_trades": 0,
+    "wins": 0,
+    "losses": 0,
+    "pattern_strength": 16,
+    "historical_success_rate": 21.4,
+    "last_updated": "2026-06-09",
+    "daily_history": [],
+    "regime_history": {
+      "TRENDING": {
+        "trades": 0,
+        "wins": 0
+      },
+      "SIDEWAYS": {
+        "trades": 0,
+        "wins": 0
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 0,
+        "wins": 0
+      },
+      "REVERSAL_HEAVY": {
+        "trades": 0,
+        "wins": 0
+      }
+    }
+  }
+}

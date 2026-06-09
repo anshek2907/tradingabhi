@@ -1,12 +1,12 @@
 """
 agreement_engine.py
 ───────────────────
-Multi-Strategy Agreement Engine (10-voter system).
+Multi-Strategy Agreement Engine (11-voter system).
 
-Collects directional votes from 10 independent strategy sources and returns
+Collects directional votes from 11 independent strategy sources and returns
 an AgreementResult describing how strongly all strategies agree.
 
-10 Strategy Voters:
+11 Strategy Voters:
   1. EMA_Trend              – EMA50 vs EMA200 directional cross
   2. RSI_Momentum           – RSI direction + momentum trend
   3. Pattern_Engine         – Recurring historical win-rate for this slot+direction
@@ -17,11 +17,12 @@ an AgreementResult describing how strongly all strategies agree.
   8. Momentum_Continuation  – Candle momentum continuation score
   9. Sequence_Pattern       – Multi-candle sequence pattern engine (6 pattern types)
   10. Market_Structure      – Structural trend, recent BOS/CHOCH and liquidity zones
+  11. Liquidity_Sweep       – Buy/Sell-side liquidity sweep detection and rejection
 
-Agreement Tiers (10-voter system):
-  8/10+ votes matching direction → STRONG_SIGNAL
-  6/10-7/10 votes matching direction → MODERATE_SIGNAL
-  <6/10                          → SKIP
+Agreement Tiers (11-voter system):
+  9/11+ votes matching direction → STRONG_SIGNAL
+  7/11-8/11 votes matching direction → MODERATE_SIGNAL
+  <7/11                          → SKIP
 
 Usage:
     from agreement_engine import agreement_engine, AgreementResult, AGREEMENT_SKIP
@@ -51,6 +52,7 @@ VOTER_LIVE_CONFIRMATION = "Live_Confirmation"
 VOTER_MOMENTUM_CONT     = "Momentum_Continuation"
 VOTER_SEQUENCE_PATTERN  = "Sequence_Pattern"
 VOTER_MARKET_STRUCTURE  = "Market_Structure"
+VOTER_LIQUIDITY_SWEEP   = "Liquidity_Sweep"
 
 ALL_VOTERS = [
     VOTER_EMA_TREND,
@@ -63,17 +65,18 @@ ALL_VOTERS = [
     VOTER_MOMENTUM_CONT,
     VOTER_SEQUENCE_PATTERN,
     VOTER_MARKET_STRUCTURE,
+    VOTER_LIQUIDITY_SWEEP,
 ]
 
-TOTAL_VOTERS = len(ALL_VOTERS)  # 10
+TOTAL_VOTERS = len(ALL_VOTERS)  # 11
 
 # ── Agreement tiers ────────────────────────────────────────────────────────
 AGREEMENT_STRONG   = "STRONG_SIGNAL"
 AGREEMENT_MODERATE = "MODERATE_SIGNAL"
 AGREEMENT_SKIP     = "SKIP"
 
-STRONG_THRESHOLD   = 8  # 8/10+ → STRONG
-MODERATE_THRESHOLD = 6  # 6/10-7/10 → MODERATE
+STRONG_THRESHOLD   = 9  # 9/11+ → STRONG  (~82% agreement)
+MODERATE_THRESHOLD = 7  # 7/11-8/11 → MODERATE  (~64% agreement)
 
 # ── Vote values ────────────────────────────────────────────────────────────
 VOTE_CALL    = "CALL"
@@ -87,7 +90,7 @@ class AgreementResult:
 
     direction:           str  = ""            # Candidate direction being evaluated
     agreement_score:     int  = 0             # Votes agreeing with candidate direction
-    total_voters:        int  = TOTAL_VOTERS  # Always 8
+    total_voters:        int  = TOTAL_VOTERS  # Always 11
     tier:                str  = AGREEMENT_SKIP
     agreement_direction: str  = "MIXED"       # "CALL" | "PUT" | "MIXED"
     bullish_votes:       int  = 0
@@ -112,7 +115,7 @@ class AgreementResult:
         Return a Telegram-formatted agreement breakdown block.
 
         Example:
-            Agreement: 7/8 🟢
+            Agreement: 7/11 🟢
               ✅ EMA Trend: CALL
               ✅ RSI Momentum: CALL
               ✅ Pattern Engine: CALL
@@ -142,7 +145,7 @@ class AgreementResult:
         return "\n".join(lines)
 
     def short_summary(self) -> str:
-        """One-line summary: 'Agreement: 7/8 🟢 STRONG_SIGNAL'"""
+        """One-line summary: 'Agreement: 7/11 🟢 STRONG_SIGNAL'"""
         if self.tier == AGREEMENT_STRONG:
             emoji = "🟢"
         elif self.tier == AGREEMENT_MODERATE:
@@ -370,6 +373,39 @@ class AgreementEngine:
         except Exception:
             votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
 
+        # ── Voter 11: Liquidity Sweep ───────────────────────────────────
+        # A sweep in the SAME direction as our candidate confirms a trap reversal.
+        # e.g., SSL (sell-side sweep → CALL signal) + candidate direction CALL → votes CALL.
+        # If no sweep detected, votes NEUTRAL (abstains without penalising).
+        # If opposing strong sweep detected, votes against the candidate direction.
+        try:
+            if market_structure is not None and getattr(market_structure, "sweep_result", None) is not None:
+                ms_sweep = market_structure
+                if ms_sweep.has_strong_sweep:
+                    if ms_sweep.sweep_direction == direction:
+                        # Strong sweep confirms our candidate direction (trap reversal)
+                        votes[VOTER_LIQUIDITY_SWEEP] = direction
+                    elif ms_sweep.sweep_direction and ms_sweep.sweep_direction != direction:
+                        # Strong opposing sweep — price swept toward our direction,
+                        # but rejection was the other way: vote against candidate
+                        opp = VOTE_PUT if direction == VOTE_CALL else VOTE_CALL
+                        votes[VOTER_LIQUIDITY_SWEEP] = opp
+                    else:
+                        votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
+                elif ms_sweep.sweep_result.detected and ms_sweep.sweep_confidence >= 50:
+                    # Moderate sweep with enough confidence — follow its direction
+                    if ms_sweep.sweep_direction == direction:
+                        votes[VOTER_LIQUIDITY_SWEEP] = direction
+                    else:
+                        votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
+                else:
+                    # No sweep detected or weak sweep — abstain
+                    votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
+            else:
+                votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
+        except Exception:
+            votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
+
         # ── Tally votes ────────────────────────────────────────────────────
         bullish_votes = sum(1 for v in votes.values() if v == VOTE_CALL)
         bearish_votes = sum(1 for v in votes.values() if v == VOTE_PUT)
@@ -408,7 +444,7 @@ class AgreementEngine:
 
         logger.debug(
             "[Agreement] %s %s | score=%d/%d | tier=%s | "
-            "EMA=%s RSI=%s Pat=%s Prob=%s Reg=%s Vol=%s Live=%s Mom=%s Seq=%s",
+            "EMA=%s RSI=%s Pat=%s Prob=%s Reg=%s Vol=%s Live=%s Mom=%s Seq=%s Str=%s Swp=%s",
             direction, regime,
             agreement_score, TOTAL_VOTERS, tier,
             votes.get(VOTER_EMA_TREND,         "?"),
@@ -421,6 +457,7 @@ class AgreementEngine:
             votes.get(VOTER_MOMENTUM_CONT,      "?"),
             votes.get(VOTER_SEQUENCE_PATTERN,   "?"),
             votes.get(VOTER_MARKET_STRUCTURE,   "?"),
+            votes.get(VOTER_LIQUIDITY_SWEEP,    "?"),
         )
 
         return result
