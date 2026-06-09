@@ -356,7 +356,7 @@ def maybe_send_daily_signal_list():
                 agr_emoji = "🟡"
             else:
                 agr_emoji = "⬜"
-            agr_line = f"Agreement: {agr_score}/{agr_total} {agr_emoji} | {agr_tier}"
+            agr_line = f"Agreement: {agr_score}/{agr_total} {agr_emoji} | {str(agr_tier).replace('_', ' ')}"
         else:
             agr_line = None
 
