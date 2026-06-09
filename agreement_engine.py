@@ -210,7 +210,7 @@ class AgreementEngine:
                 votes[VOTER_EMA_TREND] = VOTE_PUT
             else:
                 votes[VOTER_EMA_TREND] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_EMA_TREND] = VOTE_NEUTRAL
 
         # ── Voter 2: RSI Momentum ──────────────────────────────────────────
@@ -224,7 +224,7 @@ class AgreementEngine:
                 votes[VOTER_RSI_MOMENTUM] = VOTE_PUT
             else:
                 votes[VOTER_RSI_MOMENTUM] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_RSI_MOMENTUM] = VOTE_NEUTRAL
 
         # ── Voter 3: Pattern Engine ────────────────────────────────────────
@@ -241,7 +241,7 @@ class AgreementEngine:
                 # Opposite direction has stronger pattern
                 opp = VOTE_PUT if direction == VOTE_CALL else VOTE_CALL
                 votes[VOTER_PATTERN_ENGINE] = opp
-        except Exception:
+        except Exception as e:
             votes[VOTER_PATTERN_ENGINE] = VOTE_NEUTRAL
 
         # ── Voter 4: Weighted Probability Score ────────────────────────────
@@ -258,7 +258,7 @@ class AgreementEngine:
                 votes[VOTER_PROBABILITY_SCORE] = VOTE_NEUTRAL  # at floor — borderline
             else:
                 votes[VOTER_PROBABILITY_SCORE] = VOTE_NEUTRAL  # should not reach here
-        except Exception:
+        except Exception as e:
             votes[VOTER_PROBABILITY_SCORE] = VOTE_NEUTRAL
 
         # ── Voter 5: Market Regime ─────────────────────────────────────────
@@ -289,7 +289,7 @@ class AgreementEngine:
             else:
                 # SIDEWAYS / MODERATE → neutral
                 votes[VOTER_MARKET_REGIME] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_MARKET_REGIME] = VOTE_NEUTRAL
 
         # ── Voter 6: Volatility Clustering ────────────────────────────────
@@ -302,7 +302,7 @@ class AgreementEngine:
                 votes[VOTER_VOLATILITY] = direction   # healthy vol supports candidate
             else:
                 votes[VOTER_VOLATILITY] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_VOLATILITY] = VOTE_NEUTRAL
 
         # ── Voter 7: Live Confirmation Engine ─────────────────────────────
@@ -330,7 +330,7 @@ class AgreementEngine:
                 live_ok = False
 
             votes[VOTER_LIVE_CONFIRMATION] = direction if live_ok else VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_LIVE_CONFIRMATION] = VOTE_NEUTRAL
 
         # ── Voter 8: Momentum Continuation ────────────────────────────────
@@ -343,7 +343,7 @@ class AgreementEngine:
                 votes[VOTER_MOMENTUM_CONT] = VOTE_PUT
             else:
                 votes[VOTER_MOMENTUM_CONT] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_MOMENTUM_CONT] = VOTE_NEUTRAL
 
         # ── Voter 9: Sequence Pattern ──────────────────────────────────────
@@ -355,7 +355,7 @@ class AgreementEngine:
             seq_result: SequenceResult = metrics.get("_sequence_result") or \
                 sequence_engine.analyse(df, direction_hint=direction)
             votes[VOTER_SEQUENCE_PATTERN] = get_sequence_vote(seq_result, direction)
-        except Exception:
+        except Exception as e:
             votes[VOTER_SEQUENCE_PATTERN] = VOTE_NEUTRAL
 
         # ── Voter 10: Market Structure ─────────────────────────────────────
@@ -370,7 +370,7 @@ class AgreementEngine:
                     votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
             else:
                 votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_MARKET_STRUCTURE] = VOTE_NEUTRAL
 
         # ── Voter 11: Liquidity Sweep ───────────────────────────────────
@@ -403,7 +403,7 @@ class AgreementEngine:
                     votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
             else:
                 votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
-        except Exception:
+        except Exception as e:
             votes[VOTER_LIQUIDITY_SWEEP] = VOTE_NEUTRAL
 
         # ── Tally votes ────────────────────────────────────────────────────

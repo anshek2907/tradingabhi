@@ -328,7 +328,7 @@ def get_historical_data(outputsize=4500) -> pd.DataFrame | None:
         return df
 
     except Exception as e:
-        logger.error(f"Fetch Error: {e}")
+        logger.exception(f"Fetch Error: {e}")
         cached = _load_df_cache()
         if cached is not None:
             logger.info("Using cached DataFrame.")
@@ -396,7 +396,7 @@ def decide_direction_live(df: pd.DataFrame) -> tuple[str, int]:
                 call_score += 25
             else:
                 put_score += 25
-    except Exception:
+    except Exception as e:
         pass
 
     # RSI Momentum (25)
@@ -411,7 +411,7 @@ def decide_direction_live(df: pd.DataFrame) -> tuple[str, int]:
             call_score += 12
         else:
             put_score += 12
-    except Exception:
+    except Exception as e:
         pass
 
     # ATR Strength (15)
@@ -423,7 +423,7 @@ def decide_direction_live(df: pd.DataFrame) -> tuple[str, int]:
                 call_score += 15
             else:
                 put_score += 15
-    except Exception:
+    except Exception as e:
         pass
 
     # Candle Momentum (15)
@@ -439,7 +439,7 @@ def decide_direction_live(df: pd.DataFrame) -> tuple[str, int]:
             call_score += 7
         else:
             put_score += 7
-    except Exception:
+    except Exception as e:
         pass
 
     # Price vs EMA50 (10)
@@ -449,7 +449,7 @@ def decide_direction_live(df: pd.DataFrame) -> tuple[str, int]:
             call_score += 10
         else:
             put_score += 10
-    except Exception:
+    except Exception as e:
         pass
 
     if call_score > put_score:
@@ -1018,7 +1018,7 @@ def _minutes_from_time(time_str: str) -> int:
 def _metric_float(metrics: dict, key: str, default: float = 0.0) -> float:
     try:
         return round(float(metrics.get(key, default)), 3)
-    except Exception:
+    except Exception as e:
         return default
 
 
@@ -1591,7 +1591,7 @@ def has_run_today() -> bool:
     try:
         state = safe_load_json(STATE_FILE, default={})
         return state.get("last_run_date") == _today_ist_str()
-    except Exception:
+    except Exception as e:
         return False
 
 
@@ -1717,7 +1717,8 @@ def generate_forced_daily_signals(df: pd.DataFrame | None = None) -> list[dict]:
             h, m = map(int, t_str.split(":"))
             if 13 * 60 <= h * 60 + m <= 22 * 60:
                 filtered.append(s)
-        except Exception:
+        except Exception as e:
+            logger.exception("Unexpected error during loop")
             continue
 
     filtered.sort(key=lambda x: x.get("time", ""))
@@ -1728,7 +1729,7 @@ def generate_forced_daily_signals(df: pd.DataFrame | None = None) -> list[dict]:
             f"{FORCE_MARTINGALE_TIME} | confidence={confidence}%"
         )
     except Exception as e:
-        logger.error(f"Could not save forced signals: {e}")
+        logger.exception(f"Could not save forced signals: {e}")
 
     return forced_signals
 

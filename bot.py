@@ -247,7 +247,7 @@ def _filter_generated_signals_for_today(signals, now):
     file_date = None
     try:
         file_date = pd.Timestamp(os.path.getmtime(GENERATED_SIGNALS_PATH), unit="s", tz="UTC").tz_convert("Asia/Kolkata").date().isoformat()
-    except Exception:
+    except Exception as e:
         file_date = None
     fresh = []
     for sig in signals:
@@ -270,7 +270,8 @@ def _filter_generated_signals_for_today(signals, now):
             sig["direction"] = direction
             sig["pair"] = str(sig.get("pair", "EURUSD")).replace("/", "")
             fresh.append(sig)
-        except Exception:
+        except Exception as e:
+            logger.exception("Unexpected error during loop")
             continue
 
     return sorted(fresh, key=lambda x: x.get("time", ""))
@@ -317,7 +318,7 @@ def maybe_send_daily_signal_list():
         _daily_signal_list_sent_date = today
         return
     except Exception as e:
-        logger.error(f"Failed to read generated_signals.json: {e}")
+        logger.exception(f"Failed to read generated_signals.json: {e}")
         return
 
     if not signals:
@@ -418,7 +419,7 @@ def maybe_send_daily_signal_list():
             briefing_lines.append(
                 f"14-day: wr={br_wr}% | best regime={str(br_regime).replace('_', ' ')} ({br_rwr}%)"
             )
-    except Exception:
+    except Exception as e:
         pass
     briefing_lines.append("")
 
@@ -568,7 +569,7 @@ def maybe_send_daily_diagnostics():
         send_telegram(msg)
 
     except Exception as e:
-        logger.error("[Diagnostics] Failed to send diagnostics: %s", e)
+        logger.exception("[Diagnostics] Failed to send diagnostics: %s", e)
 
     _daily_diagnostics_sent_date = today
 
@@ -703,7 +704,7 @@ def fetch_signal_text_from_telegram():
         return latest_text
 
     except Exception as e:
-        logger.error(f"Telegram input error: {e}")
+        logger.exception(f"Telegram input error: {e}")
         return None
 
 
@@ -769,7 +770,7 @@ def run_external_signal_engine(df, cached_minute_df=None):
         elif is_api_call_allowed("fallback 5min"):
             try:
                 fallback_df = get_data("5min")
-            except Exception:
+            except Exception as e:
                 fallback_df = None
 
         if fallback_df is not None and len(fallback_df) >= 200:
@@ -977,7 +978,7 @@ Auto Close: {forex['auto_close']}
                         source="auto",
                     )
                 except Exception as e:
-                    logger.error(f"Tracking error: {e}")
+                    logger.exception(f"Tracking error: {e}")
 
                 last_trade_time = pd.Timestamp.now(tz="Asia/Kolkata")
                 signal_manager.last_confirmed_trade_time = last_trade_time  # Update global trade lock
@@ -995,7 +996,7 @@ Auto Close: {forex['auto_close']}
             time.sleep(sleep_time)
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             time.sleep(60)
 
 

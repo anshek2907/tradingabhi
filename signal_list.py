@@ -103,13 +103,13 @@ class SmartSignalManager:
             if raw_lctt:
                 try:
                     self.last_confirmed_trade_time = datetime.fromisoformat(raw_lctt)
-                except Exception:
+                except Exception as e:
                     self.last_confirmed_trade_time = None
             
             self.recalculate_stats()
             logger.info(f"Loaded {len(self.tracked_trades)} trades from {self.storage_file}")
         except Exception as e:
-            logger.error(f"Error loading {self.storage_file}: {e}")
+            logger.exception(f"Error loading {self.storage_file}: {e}")
 
     def save(self):
         try:
@@ -129,7 +129,7 @@ class SmartSignalManager:
             
             safe_save_json(self.storage_file, data)
         except Exception as e:
-            logger.error(f"Error saving {self.storage_file}: {e}")
+            logger.exception(f"Error saving {self.storage_file}: {e}")
 
     def recalculate_stats(self):
         resolved = [t for t in self.tracked_trades if t.get("resolved")]
@@ -276,7 +276,7 @@ def _parse_line(line: str, current_day: date) -> Optional[SignalEntry]:
             raw_line=stripped,
         )
     except Exception as e:
-        logger.error(f"Parse error: {e}")
+        logger.exception(f"Parse error: {e}")
         return None
 
 
@@ -303,7 +303,7 @@ def load_generated_signals() -> List[SignalEntry]:
         if not isinstance(generated, list):
             return []
     except Exception as e:
-        logger.error(f"Error loading generated signals: {e}")
+        logger.exception(f"Error loading generated signals: {e}")
         return []
 
     tz = _get_timezone()
@@ -313,7 +313,7 @@ def load_generated_signals() -> List[SignalEntry]:
     try:
         mtime = datetime.fromtimestamp(os.path.getmtime(GENERATED_SIGNALS_FILE), tz=tz)
         file_date = mtime.date()
-    except Exception:
+    except Exception as e:
         file_date = None
 
     entries = []
@@ -367,7 +367,8 @@ def _merge_generated_into_manager() -> None:
         try:
             key = _signal_key(sig["time"], sig["direction"])
             existing_keys.add(key)
-        except Exception:
+        except Exception as e:
+            logger.exception("Unexpected error during loop")
             continue
 
     new_entries = []
@@ -444,7 +445,7 @@ def _inject_forced_signals_into_manager(now: Optional[datetime] = None) -> None:
             manager.active_signals.append(forced_state)
             logger.debug(f"[FORCED] Injected {forced_type} signal slot at {time_str}")
         except Exception as e:
-            logger.error(f"[FORCED] Injection error for {time_str}: {e}")
+            logger.exception(f"[FORCED] Injection error for {time_str}: {e}")
 
 
 
@@ -554,7 +555,8 @@ def should_force_fast_mode(now: Optional[datetime] = None, window_seconds: int =
             seconds_to_signal = (signal_time - now).total_seconds()
             if 0 <= seconds_to_signal <= window_seconds:
                 return True
-        except Exception:
+        except Exception as e:
+            logger.exception("Unexpected error during loop")
             continue
 
     return False
@@ -1609,7 +1611,7 @@ def _process_forced_signals(
                 conf_df = work_df if (work_df is not None and len(work_df) >= 2) else df
                 try:
                     _, tp, sl = build_forex_targets(conf_df, live_dir, live_conf)
-                except Exception:
+                except Exception as e:
                     atr_val = float(conf_df.iloc[-1]["ATR"]) if conf_df is not None and len(conf_df) >= 1 else 0.0005
                     close_val = float(conf_df.iloc[-1]["Close"]) if conf_df is not None and len(conf_df) >= 1 else 1.0
                     tp = round(close_val + atr_val, 5) if live_dir == "CALL" else round(close_val - atr_val, 5)
@@ -1642,14 +1644,14 @@ def _process_forced_signals(
                         overlapped_forced=is_overlapped,
                     )
                 except Exception as te:
-                    logger.error(f"[FORCED] store_tracked_signal error: {te}")
+                    logger.exception(f"[FORCED] store_tracked_signal error: {te}")
 
                 logger.info(
                     f"[FORCED] CONFIRMED: {'MG' if is_martingale else 'DIR'} {signal_time:%H:%M} "
                     f"{live_dir} conf={live_conf}% low={low_confidence}"
                 )
         except Exception as e:
-            logger.error(f"[FORCED] Processing error: {e}")
+            logger.exception(f"[FORCED] Processing error: {e}")
 
 
 def process_signal_list(
@@ -1685,7 +1687,7 @@ def process_signal_list(
             minute_df = minute_data_fetcher()
             if minute_df is not None and len(minute_df) >= 200:
                 minute_df = add_indicators(minute_df)
-        except Exception:
+        except Exception as e:
             minute_df = None
 
     # 1) Check for any tracked signals that have expired and report results
@@ -1726,10 +1728,10 @@ def process_signal_list(
                     else:
                         final_price = float(final_data.iloc[-1]["Close"])
                 except Exception as e:
-                    logger.error(f"Error selecting expiry candle: {e}")
+                    logger.exception(f"Error selecting expiry candle: {e}")
                     try:
                         final_price = float(final_data.iloc[-1]["Close"])
-                    except:
+                    except Exception as e:
                         final_price = float(df.iloc[-1]["Close"])
                 entry_price = float(entry.get("entry_price"))
                 direction = entry.get("direction")
@@ -1770,12 +1772,12 @@ def process_signal_list(
                         record_session_outcome(ist_minutes, entry.get("direction", "CALL"), entry["result"])
                         
                 except Exception as le:
-                    logger.error(f"LearningEngine record error: {le}")
+                    logger.exception(f"LearningEngine record error: {le}")
 
                 # Save updated tracked signals to JSON
                 manager.save()
     except Exception as e:
-        logger.error(f"Result tracking error: {e}")
+        logger.exception(f"Result tracking error: {e}")
 
     # ── CLEAN UP STALE SIGNALS ───────────────────────────────────────────────
     fresh_signals = []
@@ -1881,7 +1883,7 @@ def process_signal_list(
                                 source=signal.get("source", "telegram"),
                             )
                         except Exception as e:
-                            logger.error(f"store_tracked_signal error: {e}")
+                            logger.exception(f"store_tracked_signal error: {e}")
                         signal["confirmed_sent"] = True
                         manager.last_confirmed_trade_time = now
                         logger.info(f"Signal confirmed: {signal_time:%H:%M} {direction} conf={confidence}%")
@@ -1987,13 +1989,13 @@ def process_signal_list(
                             source=signal.get("source", "telegram"),
                         )
                     except Exception as e:
-                        logger.error(f"store_tracked_signal error: {e}")
+                        logger.exception(f"store_tracked_signal error: {e}")
                     manager.processed_signals.add(mg_key)
                     signal["martingale_confirmed_sent"] = True
                     manager.last_confirmed_trade_time = now  # Update global trade lock
                     logger.info(f"Signal confirmed: {mg_time:%H:%M} {direction}")
         except Exception as e:
-            logger.error(f"Processing error: {e}")
+            logger.exception(f"Processing error: {e}")
             continue
 
     return messages

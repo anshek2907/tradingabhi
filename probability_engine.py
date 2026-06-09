@@ -266,37 +266,7 @@ class ProbabilityEngine:
     # ── Public API ─────────────────────────────────────────
 
     @staticmethod
-    def compute(
-        inputs: ProbabilityInputs,
-        voter_weight_adjustments: Optional[dict] = None,
-    ) -> ProbabilityResult:
-        """
-        Compute the centralized probability score for one candidate slot.
-
-        Args:
-            inputs:                  All raw sub-metrics (ProbabilityInputs).
-            voter_weight_adjustments: Optional dict of metric_key → multiplier
-                                     from StrategyWeightTracker.get_formula_weight_adjustments().
-                                     When supplied, each formula weight is scaled
-                                     by its voter-performance multiplier before scoring.
-                                     This implements the Dynamic Strategy Weighting system.
-
-        Steps:
-          1. Build effective weights (baseline * voter multiplier, re-normalised)
-          2. Compute weighted linear sum (all positive terms + reversal penalty)
-          3. Apply quality micro-penalties for structural weaknesses
-          4. Apply regime multiplier (boost or reduce based on market type)
-          5. Clamp to [0, 100]
-          6. Classify into STRONG / MODERATE / SKIP tier
-        """
-        # ── Step 0: Build effective weights (voter-adaptive) ──────────
-        # Apply voter multipliers to the baseline formula weights.
-        # Each metric multiplier is clamped to [0.60, 1.40] (enforced in tracker)
-        # so no single voter can dominate or zero-out a component.
-        # After scaling, weights are re-normalised so positive contributions
-        # still sum to 1.0, preserving the overall score range.
-        adj = voter_weight_adjustments or {}
-
+    def _compute_linear_score(inputs: ProbabilityInputs, adj: dict) -> tuple[float, dict]:
         def _w(key: str) -> float:
             return _WEIGHTS[key] * float(adj.get(key, 1.0))
 
@@ -308,139 +278,115 @@ class ProbabilityEngine:
         raw_vol       = _w("volatility_quality")
         raw_reversal  = _w("reversal_risk")
 
-        # Positive weights (excluding reversal penalty which is subtracted)
         _pos_sum = raw_win_rate + raw_dir_cons + raw_atr + raw_momentum + raw_session + raw_vol
         _norm = (_pos_sum / (sum(_WEIGHTS[k] for k in (
             "win_rate", "direction_consistency", "atr_quality",
             "momentum_strength", "session_strength", "volatility_quality"
         )))) if _pos_sum > 0 else 1.0
 
-        # Effective weights (normalised so formula output scale stays [0,100])
         eff_win_rate  = raw_win_rate  / _norm
         eff_dir_cons  = raw_dir_cons  / _norm
         eff_atr       = raw_atr       / _norm
         eff_momentum  = raw_momentum  / _norm
         eff_session   = raw_session   / _norm
         eff_vol       = raw_vol       / _norm
-        eff_reversal  = raw_reversal  # penalty — not normalised (kept consistent)
+        eff_reversal  = raw_reversal
 
-        if adj:
-            logger.debug(
-                "[ProbEng] Voter adjustments applied: %s",
-                {k: round(v, 3) for k, v in adj.items()},
-            )
-
-        # ── Step 1: Weighted linear components ────────────
-        contrib_win_rate  = inputs.win_rate              * eff_win_rate
-        contrib_dir_cons  = inputs.direction_consistency * eff_dir_cons
-        contrib_atr       = inputs.atr_quality           * eff_atr
-        contrib_momentum  = inputs.momentum_strength     * eff_momentum
-        contrib_session   = inputs.session_strength      * eff_session
-        contrib_vol       = inputs.volatility_quality    * eff_vol
-        contrib_reversal  = inputs.reversal_risk         * eff_reversal   # penalty
+        contribs = {
+            'win_rate': inputs.win_rate * eff_win_rate,
+            'direction_consistency': inputs.direction_consistency * eff_dir_cons,
+            'atr_quality': inputs.atr_quality * eff_atr,
+            'momentum': inputs.momentum_strength * eff_momentum,
+            'session': inputs.session_strength * eff_session,
+            'volatility': inputs.volatility_quality * eff_vol,
+            'reversal': inputs.reversal_risk * eff_reversal,
+        }
 
         linear = (
-            contrib_win_rate
-            + contrib_dir_cons
-            + contrib_atr
-            + contrib_momentum
-            + contrib_session
-            + contrib_vol
-            - contrib_reversal   # subtracted (reduced weight vs v1)
+            contribs['win_rate']
+            + contribs['direction_consistency']
+            + contribs['atr_quality']
+            + contribs['momentum']
+            + contribs['session']
+            + contribs['volatility']
+            - contribs['reversal']
         )
 
-        # ── Step 2: Structural quality micro-penalties (v2 — softened) ────
-        # Penalties are intentionally lighter to avoid over-rejection of valid signals.
+        return linear, contribs
+
+    @staticmethod
+    def _compute_structural_penalties(inputs: ProbabilityInputs, linear: float) -> float:
         penalties = 0.0
 
-        # Weak historical win rate (softened thresholds)
-        if inputs.win_rate < 55.0:      # was 58.0 — only penalize genuinely weak
-            penalties += 10.0           # was 14.0 — reduced penalty
-        elif inputs.win_rate < 60.0:    # was 62.0
-            penalties += 4.0            # was 6.0
+        if inputs.win_rate < 55.0:
+            penalties += 10.0
+        elif inputs.win_rate < 60.0:
+            penalties += 4.0
 
-        # High reversal risk (reduced penalty — avoid over-filtering valid signals)
-        if inputs.reversal_risk > 55.0:   # was 48.0 — only penalize extreme reversals
-            penalties += 5.0              # was 8.0
-        elif inputs.reversal_risk > 47.0: # was 40.0
-            penalties += 2.0              # was 3.0
+        if inputs.reversal_risk > 55.0:
+            penalties += 5.0
+        elif inputs.reversal_risk > 47.0:
+            penalties += 2.0
 
-        # Dead/noisy volatility zone — these are pre-gated before scoring
-        # but we apply a small residual penalty for boundary cases
         if inputs.volatility_zone == "dead":
-            penalties += 8.0            # was 12.0
+            penalties += 8.0
         elif inputs.volatility_zone == "noisy":
-            penalties += 5.0            # was 8.0
+            penalties += 5.0
         elif inputs.volatility_zone == "unstable_spike":
-            penalties += 10.0           # was 15.0
+            penalties += 10.0
 
-        # Low volatility quality (softened threshold)
-        if inputs.volatility_quality < 48.0:   # was 55.0 — raised bar for penalty
-            penalties += 6.0                   # was 10.0
+        if inputs.volatility_quality < 48.0:
+            penalties += 6.0
 
-        # ── Regime-confidence scaling on penalties ────────
-        # Scale: 0.65 – 1.15 (was 0.75 – 1.25 → narrowed to soften impact)
         regime_conf_factor = 0.65 + (inputs.regime_confidence / 100.0) * 0.50
         penalties *= regime_conf_factor
 
-        raw_pre_regime = max(0.0, linear - penalties)
+        return max(0.0, linear - penalties)
 
-        # ── Step 3: Regime multiplier ─────────────────────
+    @staticmethod
+    def _compute_regime_multiplier(inputs: ProbabilityInputs) -> float:
         regime_mult = _REGIME_MULTIPLIER.get(inputs.regime, _DEFAULT_MULTIPLIER)
 
-        # Regime-specific extra logic (softer adjustments vs v1)
         if inputs.regime == "TRENDING":
-            # Boost signals with strong momentum + good win rate in trending market
             if inputs.momentum_strength >= 68.0 and inputs.win_rate >= 63.0:
-                regime_mult = min(1.12, regime_mult + 0.05)  # was +0.04, now +0.05
-            # Bonus for strong direction consistency (recurring timing)
+                regime_mult = min(1.12, regime_mult + 0.05)
             if inputs.direction_consistency >= 72.0:
                 regime_mult = min(1.12, regime_mult + 0.02)
         elif inputs.regime == "SIDEWAYS":
-            # Extra penalty only for very low direction consistency in sideways
-            if inputs.direction_consistency < 60.0:   # was 65.0 → more tolerant
-                regime_mult = max(0.88, regime_mult - 0.03)  # was -0.04
+            if inputs.direction_consistency < 60.0:
+                regime_mult = max(0.88, regime_mult - 0.03)
         elif inputs.regime == "HIGH_VOLATILITY":
-            # Extra penalty only for unstable ATR in high-vol regime
-            if inputs.atr_quality < 55.0:   # was 60.0 → more tolerant
-                regime_mult = max(0.83, regime_mult - 0.04)  # was -0.05
+            if inputs.atr_quality < 55.0:
+                regime_mult = max(0.83, regime_mult - 0.04)
         elif inputs.regime == "REVERSAL_HEAVY":
-            # Penalise only extreme reversal risk (relaxed from >35 to >42)
             if inputs.reversal_risk > 42.0:
-                regime_mult = max(0.82, regime_mult - 0.03)  # was -0.05
+                regime_mult = max(0.82, regime_mult - 0.03)
 
-        # ── Step 4: Market Structure & Liquidity Modifiers ──
+        return regime_mult
+
+    @staticmethod
+    def _apply_market_structure_modifiers(inputs: ProbabilityInputs, regime_mult: float) -> float:
         if inputs.market_structure is not None:
             ms = inputs.market_structure
-            # Reduce confidence near strong opposing liquidity
             if ms.near_opposing_liquidity:
                 regime_mult = max(0.80, regime_mult - 0.05)
-            # Boost continuation after BOS
             if inputs.direction == ms.recent_bos:
                 regime_mult = min(1.15, regime_mult + 0.05)
-            # Boost reversal after CHOCH
             if inputs.direction == ms.recent_choch:
                 regime_mult = min(1.15, regime_mult + 0.05)
-            # Increase confidence when trend, structure, and liquidity agree
             if inputs.direction == "CALL" and ms.trend == "BULLISH" and not ms.near_opposing_liquidity:
                 regime_mult = min(1.15, regime_mult + 0.03)
             elif inputs.direction == "PUT" and ms.trend == "BEARISH" and not ms.near_opposing_liquidity:
                 regime_mult = min(1.15, regime_mult + 0.03)
 
-            # ── Liquidity Sweep Weight ────────────────────────────────────
-            # A confirmed sweep in the signal direction increases conviction
-            # for the reversal; an opposing strong sweep reduces it.
-            # Uses getattr for backward compatibility with older MarketStructureResult.
             if getattr(ms, "has_strong_sweep", False):
                 if getattr(ms, "sweep_direction", None) == inputs.direction:
-                    # Strong sweep confirms our reversal direction → meaningful boost
                     regime_mult = min(1.18, regime_mult + 0.06)
                     logger.debug(
                         "[ProbEng] Sweep boost +0.06 (strong %s sweep confirms %s)",
                         ms.sweep_direction, inputs.direction,
                     )
                 elif getattr(ms, "sweep_direction", None) and ms.sweep_direction != inputs.direction:
-                    # Strong opposing sweep → reduce confidence
                     regime_mult = max(0.78, regime_mult - 0.04)
                     logger.debug(
                         "[ProbEng] Sweep penalty -0.04 (strong opposing %s sweep vs %s)",
@@ -450,66 +396,80 @@ class ProbabilityEngine:
                 sweep_conf = getattr(ms, "sweep_confidence", 0.0)
                 sweep_dir  = getattr(ms, "sweep_direction", None)
                 if sweep_dir == inputs.direction and sweep_conf >= 50.0:
-                    # Moderate sweep in our direction → small boost
                     regime_mult = min(1.15, regime_mult + 0.03)
                     logger.debug(
                         "[ProbEng] Sweep boost +0.03 (moderate %s sweep conf=%.1f)",
                         sweep_dir, sweep_conf,
                     )
 
-        # ── Currency Strength Confirmation (confirmation-only) ───────────────────
-        # Max ±0.05 on regime_mult. Aligns as extra evidence but never overrides
-        # structure, momentum, or sweep signals.
         cb   = inputs.currency_bias
-        cs   = inputs.currency_strength_score / 100.0  # normalised 0–1
+        cs   = inputs.currency_strength_score / 100.0
         if cb == inputs.direction:
-            # Strength confirms direction → boost proportional to confidence
-            cs_boost = 0.02 + cs * 0.03          # +0.02 (weak) to +0.05 (strong)
+            cs_boost = 0.02 + cs * 0.03
             regime_mult = min(1.20, regime_mult + cs_boost)
             logger.debug(
                 "[ProbEng] CurrStr boost +%.3f (bias=%s conf=%.1f confirms %s)",
-                cs_boost, cb, inputs.currency_strength_score, inputs.direction,
+                cs_boost, cb, inputs.currency_strength_score, inputs.direction
             )
-        elif cb != "NEUTRAL" and cb != inputs.direction:
-            # Opposing currency strength → proportional small penalty
-            cs_penalty = cs * 0.03               # 0 (weak) to -0.03 (strong)
-            regime_mult = max(0.78, regime_mult - cs_penalty)
+        elif cb and cb != inputs.direction:
+            cs_penalty = 0.01 + cs * 0.02
+            regime_mult = max(0.85, regime_mult - cs_penalty)
             logger.debug(
                 "[ProbEng] CurrStr penalty -%.3f (bias=%s conf=%.1f opposes %s)",
-                cs_penalty, cb, inputs.currency_strength_score, inputs.direction,
+                cs_penalty, cb, inputs.currency_strength_score, inputs.direction
             )
 
+        return regime_mult
+
+    @staticmethod
+    def compute(
+        inputs: ProbabilityInputs,
+        voter_weight_adjustments: Optional[dict] = None,
+    ) -> ProbabilityResult:
+        adj = voter_weight_adjustments or {}
+        if adj:
+            logger.debug(
+                "[ProbEng] Voter adjustments applied: %s",
+                {k: round(v, 3) for k, v in adj.items()},
+            )
+
+        linear, contribs = ProbabilityEngine._compute_linear_score(inputs, adj)
+        raw_pre_regime = ProbabilityEngine._compute_structural_penalties(inputs, linear)
+        
+        regime_mult = ProbabilityEngine._compute_regime_multiplier(inputs)
+        regime_mult = ProbabilityEngine._apply_market_structure_modifiers(inputs, regime_mult)
+
         final_score = raw_pre_regime * regime_mult
-        final_score = max(0.0, min(100.0, final_score))
+        final_score_clamped = max(0.0, min(100.0, final_score))
 
-        tier = _classify_tier(final_score)
-
-        result = ProbabilityResult(
-            raw_linear_score              = round(raw_pre_regime, 2),
-            probability_score             = round(final_score, 2),
-            signal_tier                   = tier,
-            regime_multiplier             = round(regime_mult, 3),
-            contrib_win_rate              = round(contrib_win_rate, 2),
-            contrib_direction_consistency  = round(contrib_dir_cons, 2),
-            contrib_atr_quality           = round(contrib_atr, 2),
-            contrib_momentum              = round(contrib_momentum, 2),
-            contrib_session               = round(contrib_session, 2),
-            contrib_volatility            = round(contrib_vol, 2),
-            contrib_reversal_penalty      = round(contrib_reversal, 2),
-        )
+        tier = TIER_SKIP
+        if final_score_clamped >= 80.0:
+            tier = TIER_STRONG
+        elif final_score_clamped >= 65.0:
+            tier = TIER_MODERATE
 
         logger.debug(
-            "[ProbEng] %s %s | score=%.1f tier=%s | mult=%.3f | "
-            "win=%.1f dir=%.1f atr=%.1f mom=%.1f sess=%.1f vol=%.1f rev=-%.1f",
-            inputs.time_str, inputs.direction,
-            final_score, tier, regime_mult,
-            inputs.win_rate, inputs.direction_consistency,
-            inputs.atr_quality, inputs.momentum_strength,
-            inputs.session_strength, inputs.volatility_quality,
-            inputs.reversal_risk,
+            "[ProbEng] %s | score=%.1f tier=%s | mult=%.3f | win=%.1f dir=%.1f atr=%.1f mom=%.1f sess=%.1f vol=%.1f rev=%.1f",
+            f"{inputs.direction}",
+            final_score_clamped, tier, regime_mult,
+            inputs.win_rate, inputs.direction_consistency, inputs.atr_quality,
+            inputs.momentum_strength, inputs.session_strength, inputs.volatility_quality,
+            -inputs.reversal_risk
         )
 
-        return result
+        return ProbabilityResult(
+            probability_score=round(final_score_clamped, 2),
+            signal_tier=tier,
+            regime_multiplier=round(regime_mult, 3),
+            raw_linear_score=round(raw_pre_regime, 2),
+            contrib_win_rate=contribs['win_rate'],
+            contrib_direction_consistency=contribs['direction_consistency'],
+            contrib_atr_quality=contribs['atr_quality'],
+            contrib_momentum=contribs['momentum'],
+            contrib_session=contribs['session'],
+            contrib_volatility=contribs['volatility'],
+            contrib_reversal_penalty=contribs['reversal']
+        )
 
     @staticmethod
     def compute_with_voter_weights(
