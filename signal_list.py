@@ -1485,7 +1485,7 @@ def _process_forced_signals(
             # The forced martingale at 15:10 is still subject to regime gating.
             # A SIDEWAYS/HIGH_VOL/REVERSAL_HEAVY regime blocks MG even here;
             # the user sees a warning rather than a silent skip.
-            if is_martingale:
+            if is_martingale and abs(seconds_to_entry) <= PRE_SIGNAL_MAX_SECONDS:
                 try:
                     _mg_df = work_df if (work_df is not None and len(work_df) >= 50) else df
                     _mg_regime_report = detect_market_regime(_mg_df)
@@ -1495,7 +1495,7 @@ def _process_forced_signals(
                         if _mg_block_key not in manager.processed_signals:
                             manager.processed_signals.add(_mg_block_key)
                             _mg_block_msg = (
-                                f"\u26a0\ufe0f <b>Martingale Blocked by Adaptive Regime Control</b>\n"
+                                f"⚠️ *Martingale Blocked by Adaptive Regime Control*\n"
                                 f"Time: {signal_time:%H:%M} (forced)\n"
                                 f"Regime: {_mg_ctrl_result.regime} "
                                 f"(conf={_mg_ctrl_result.regime_confidence}%)\n"
@@ -1903,6 +1903,13 @@ def process_signal_list(
             if not manager.enable_martingale:
                 continue
 
+            mg_time = signal["martingale_time"]
+            mg_key = _signal_key(mg_time, direction)
+            seconds_to_mg = (mg_time - now).total_seconds()
+
+            if seconds_to_mg > MARTINGALE_PREALERT_MAX_SECONDS:
+                continue
+
             # ── ADAPTIVE MARTINGALE GATE (regular signals) ────────────────────
             # Evaluate live regime before allowing any martingale pre-alert or
             # confirmation.  Only TRENDING with strong confidence passes through.
@@ -1920,10 +1927,6 @@ def process_signal_list(
                     continue
             except Exception as _mg_gate_exc:
                 logger.warning("[MG-Gate] Adaptive check error (allowing MG): %s", _mg_gate_exc)
-
-            mg_time = signal["martingale_time"]
-            mg_key = _signal_key(mg_time, direction)
-            seconds_to_mg = (mg_time - now).total_seconds()
 
             if (
                 MARTINGALE_PREALERT_MIN_SECONDS <= seconds_to_mg <= MARTINGALE_PREALERT_MAX_SECONDS
