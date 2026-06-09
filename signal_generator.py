@@ -1164,289 +1164,306 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
         pd.to_numeric(df14["ATR"], errors="coerce").tail(96).median() or 0.0001
     )
 
-    candidates: list[dict] = []
-    generated_candidates_count = 0
-    accepted_signals_list = []
-    rejected_signals_list = []
     regime_confidence = market_profile["score"]  # 0-100 regime detection confidence
-
-    for ist_time_str in unique_times:
-        slot_data = df14[df14["TimeOfDay"] == ist_time_str]
-        if len(slot_data) < MIN_SLOT_OCCURRENCES:
-            continue
-
-        try:
-            h, m = map(int, ist_time_str.split(":"))
-        except ValueError:
-            continue
-        ist_minutes = h * 60 + m
-
-        if not (13 * 60 <= ist_minutes <= 22 * 60):
-            continue
-
-        session_str = _session_strength(ist_minutes)   # kept for legacy callers
-
-
-        # ── Session Intelligence (adaptive, direction-aware) ─────────────────
-        # compute_session_strength() returns an adaptive score based on:
-        #   a) session structural liquidity (Asian/London/Overlap/NY)
-        #   b) rolling win rate for this session × direction
-        #   c) historical volatility quality in this session
-        #   d) historical continuation strength
-        # The second return value (detail dict) is stored on the signal
-        # for downstream display and recording.
-        for direction in ("CALL", "PUT"):
-            generated_candidates_count += 1
-            session_str, session_detail = session_intel.compute_session_strength(
-                ist_minutes, direction, df
-            )
-            metrics  = _analyse_probability_slot(slot_data, df14, direction, session_str)
-            metrics["_session_detail"] = session_detail   # stash for signal dict
-            vol_zone = metrics["volatility_zone"]
-
-            # ── Pre-score hard gates (fast rejection before scoring) ──
-            # 1. Extreme volatility zones: always skip regardless of score
-            if vol_zone in ("dead", "noisy", "unstable_spike"):
-                logger.debug(
-                    "[Slot] Skip %s %s — vol_zone=%s", ist_time_str, direction, vol_zone
-                )
-                rejected_signals_list.append((ist_time_str, direction, f"vol_zone={vol_zone}"))
+    current_regime_floor = None
+    
+    for attempt in range(2):
+        candidates: list[dict] = []
+        generated_candidates_count = 0
+        accepted_signals_list = []
+        rejected_signals_list = []
+        for ist_time_str in unique_times:
+            slot_data = df14[df14["TimeOfDay"] == ist_time_str]
+            if len(slot_data) < MIN_SLOT_OCCURRENCES:
                 continue
 
-            # 2. ATR ratio vs regime bounds
-            slot_atr_ratio = metrics["atr_avg"] / max(atr_market_median, 1e-8)
-            if slot_atr_ratio < atr_ratio_min or slot_atr_ratio > atr_ratio_max:
-                logger.debug(
-                    "[Slot] Skip %s %s — atr_ratio=%.2f out of bounds [%.2f,%.2f]",
-                    ist_time_str, direction, slot_atr_ratio, atr_ratio_min, atr_ratio_max,
-                )
-                rejected_signals_list.append((ist_time_str, direction, f"atr_ratio={slot_atr_ratio:.2f} out of bounds [{atr_ratio_min:.2f},{atr_ratio_max:.2f}]"))
+            try:
+                h, m = map(int, ist_time_str.split(":"))
+            except ValueError:
+                continue
+            ist_minutes = h * 60 + m
+
+            if not (13 * 60 <= ist_minutes <= 22 * 60):
                 continue
 
-            # ── Sequence Pattern Analysis ──────────────────────────────
-            seq_result = sequence_engine.analyse(df, direction_hint=direction, market_structure=market_structure)
-            metrics["_sequence_result"] = seq_result
+            session_str = _session_strength(ist_minutes)   # kept for legacy callers
 
-            # Sequence momentum bonus: +-0 to +-20 based on pattern match/conflict
-            seq_bonus = get_sequence_momentum_bonus(seq_result, direction)
-            # Apply bonus to the momentum_strength metric (clamped to 0-100)
-            # before passing to probability engine so the formula benefits.
-            metrics["momentum_strength"] = round(
-                max(0.0, min(100.0, metrics["momentum_strength"] + seq_bonus * 0.5)), 1
-            )
 
-            # ── Centralized probability scoring (with dynamic voter weights) ────
-            prob_inputs = ProbabilityInputs(
-                win_rate              = metrics["win_rate"],
-                direction_consistency = metrics["direction_consistency"],
-                atr_quality           = metrics["atr_quality"],
-                momentum_strength     = metrics["momentum_strength"],
-                session_strength      = metrics["session_strength"],
-                volatility_quality    = metrics["volatility_quality"],
-                reversal_risk         = metrics["reversal_risk"],
-                regime                = regime,
-                regime_confidence     = float(regime_confidence),
-                volatility_zone       = vol_zone,
-                time_str              = ist_time_str,
-                direction             = direction,
-                market_structure      = market_structure,
-                currency_bias         = cs_result.bias,
-                currency_strength_score = cs_result.bias_confidence,
-            )
-            # Use dynamic voter weights (auto-fetches from strategy_weight_tracker)
-            prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
-
-            # ── Tier gate: use regime-aware acceptability (dynamic min score) ─────
-            # is_acceptable_for_regime() applies the regime-specific floor:
-            #   TRENDING=70, SIDEWAYS=78, HIGH_VOL/REVERSAL=80
-            # This allows quality signals through in trending markets without
-            # forcing weak trades in sideways/volatile conditions.
-            if not probability_engine.is_acceptable_for_regime(prob_result, regime):
-                logger.debug(
-                    "[Score] SKIP %s %s — prob_score=%.1f tier=%s regime_floor=%.0f",
-                    ist_time_str, direction,
-                    prob_result.probability_score, prob_result.signal_tier,
-                    _regime_min_score(regime),
+            # ── Session Intelligence (adaptive, direction-aware) ─────────────────
+            # compute_session_strength() returns an adaptive score based on:
+            #   a) session structural liquidity (Asian/London/Overlap/NY)
+            #   b) rolling win rate for this session × direction
+            #   c) historical volatility quality in this session
+            #   d) historical continuation strength
+            # The second return value (detail dict) is stored on the signal
+            # for downstream display and recording.
+            for direction in ("CALL", "PUT"):
+                generated_candidates_count += 1
+                session_str, session_detail = session_intel.compute_session_strength(
+                    ist_minutes, direction, df
                 )
-                rejected_signals_list.append((ist_time_str, direction, f"prob_score={prob_result.probability_score:.1f} < regime_floor={_regime_min_score(regime):.0f}"))
-                continue
+                metrics  = _analyse_probability_slot(slot_data, df14, direction, session_str)
+                metrics["_session_detail"] = session_detail   # stash for signal dict
+                vol_zone = metrics["volatility_zone"]
 
-            # ── REVERSAL_HEAVY extra gate ─────────────────────────────
-            # In reversal-heavy markets only STRONG signals are allowed
-            if regime == "REVERSAL_HEAVY" and prob_result.signal_tier != TIER_STRONG:
+                # ── Pre-score hard gates (fast rejection before scoring) ──
+                # 1. Extreme volatility zones: always skip regardless of score
+                if vol_zone in ("dead", "noisy", "unstable_spike"):
+                    logger.debug(
+                        "[Slot] Skip %s %s — vol_zone=%s", ist_time_str, direction, vol_zone
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"vol_zone={vol_zone}"))
+                    continue
+
+                # 2. ATR ratio vs regime bounds
+                slot_atr_ratio = metrics["atr_avg"] / max(atr_market_median, 1e-8)
+                if slot_atr_ratio < atr_ratio_min or slot_atr_ratio > atr_ratio_max:
+                    logger.debug(
+                        "[Slot] Skip %s %s — atr_ratio=%.2f out of bounds [%.2f,%.2f]",
+                        ist_time_str, direction, slot_atr_ratio, atr_ratio_min, atr_ratio_max,
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"atr_ratio={slot_atr_ratio:.2f} out of bounds [{atr_ratio_min:.2f},{atr_ratio_max:.2f}]"))
+                    continue
+
+                # ── Sequence Pattern Analysis ──────────────────────────────
+                seq_result = sequence_engine.analyse(df, direction_hint=direction, market_structure=market_structure)
+                metrics["_sequence_result"] = seq_result
+
+                # Sequence momentum bonus: +-0 to +-20 based on pattern match/conflict
+                seq_bonus = get_sequence_momentum_bonus(seq_result, direction)
+                # Apply bonus to the momentum_strength metric (clamped to 0-100)
+                # before passing to probability engine so the formula benefits.
+                metrics["momentum_strength"] = round(
+                    max(0.0, min(100.0, metrics["momentum_strength"] + seq_bonus * 0.5)), 1
+                )
+
+                # ── Centralized probability scoring (with dynamic voter weights) ────
+                prob_inputs = ProbabilityInputs(
+                    win_rate              = metrics["win_rate"],
+                    direction_consistency = metrics["direction_consistency"],
+                    atr_quality           = metrics["atr_quality"],
+                    momentum_strength     = metrics["momentum_strength"],
+                    session_strength      = metrics["session_strength"],
+                    volatility_quality    = metrics["volatility_quality"],
+                    reversal_risk         = metrics["reversal_risk"],
+                    regime                = regime,
+                    regime_confidence     = float(regime_confidence),
+                    volatility_zone       = vol_zone,
+                    time_str              = ist_time_str,
+                    direction             = direction,
+                    market_structure      = market_structure,
+                    currency_bias         = cs_result.bias,
+                    currency_strength_score = cs_result.bias_confidence,
+                )
+                # Use dynamic voter weights (auto-fetches from strategy_weight_tracker)
+                prob_result = probability_engine.compute_with_voter_weights(prob_inputs)
+
+                # ── Tier gate: use regime-aware acceptability (dynamic min score) ─────
+                # is_acceptable_for_regime() applies the regime-specific floor:
+                #   TRENDING=70, SIDEWAYS=78, HIGH_VOL/REVERSAL=80
+                # This allows quality signals through in trending markets without
+                # forcing weak trades in sideways/volatile conditions.
+                if not probability_engine.is_acceptable_for_regime(prob_result, regime, current_regime_floor):
+                    logger.debug(
+                        "[Score] SKIP %s %s — prob_score=%.1f tier=%s regime_floor=%.0f",
+                        ist_time_str, direction,
+                        prob_result.probability_score, prob_result.signal_tier,
+                        (current_regime_floor if current_regime_floor is not None else _regime_min_score(regime)),
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"prob_score={prob_result.probability_score:.1f} < regime_floor={(current_regime_floor if current_regime_floor is not None else _regime_min_score(regime)):.0f}"))
+                    continue
+
+                # ── REVERSAL_HEAVY extra gate ─────────────────────────────
+                # In reversal-heavy markets only STRONG signals are allowed
+                if regime == "REVERSAL_HEAVY" and prob_result.signal_tier != TIER_STRONG:
+                    logger.info(
+                        "[Regime] %s %s paused — reversal-heavy requires STRONG "
+                        "(score=%.1f tier=%s)",
+                        ist_time_str, direction,
+                        prob_result.probability_score, prob_result.signal_tier,
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"reversal-heavy requires STRONG (score={prob_result.probability_score:.1f})"))
+                    continue
+
+                # ── Multi-Strategy Agreement Gate ─────────────────────────────────
+                # Evaluate all 8 strategy voters. Gate: 6/8=STRONG, 5/8=MODERATE, <5=SKIP.
+                # This is an ADDITIONAL filter on top of the probability gate — it never
+                # replaces market safety, stale cleanup, martingale, or timezone logic.
+                agreement = agreement_engine.compute(
+                    df, direction, metrics, regime, prob_result, live_direction, market_structure=market_structure
+                )
+                if agreement.tier == AGREEMENT_SKIP:
+                    logger.info(
+                        "[Agreement] SKIP %s %s — score=%d/%d (%s)",
+                        ist_time_str, direction,
+                        agreement.agreement_score, agreement.total_voters, agreement.tier,
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"agreement={agreement.agreement_score}/{agreement.total_voters} ({agreement.tier})"))
+                    continue
+
                 logger.info(
-                    "[Regime] %s %s paused — reversal-heavy requires STRONG "
-                    "(score=%.1f tier=%s)",
-                    ist_time_str, direction,
-                    prob_result.probability_score, prob_result.signal_tier,
-                )
-                rejected_signals_list.append((ist_time_str, direction, f"reversal-heavy requires STRONG (score={prob_result.probability_score:.1f})"))
-                continue
-
-            # ── Multi-Strategy Agreement Gate ─────────────────────────────────
-            # Evaluate all 8 strategy voters. Gate: 6/8=STRONG, 5/8=MODERATE, <5=SKIP.
-            # This is an ADDITIONAL filter on top of the probability gate — it never
-            # replaces market safety, stale cleanup, martingale, or timezone logic.
-            agreement = agreement_engine.compute(
-                df, direction, metrics, regime, prob_result, live_direction, market_structure=market_structure
-            )
-            if agreement.tier == AGREEMENT_SKIP:
-                logger.info(
-                    "[Agreement] SKIP %s %s — score=%d/%d (%s)",
+                    "[Agreement] %s %s — score=%d/%d tier=%s",
                     ist_time_str, direction,
                     agreement.agreement_score, agreement.total_voters, agreement.tier,
                 )
-                rejected_signals_list.append((ist_time_str, direction, f"agreement={agreement.agreement_score}/{agreement.total_voters} ({agreement.tier})"))
-                continue
 
-            logger.info(
-                "[Agreement] %s %s — score=%d/%d tier=%s",
-                ist_time_str, direction,
-                agreement.agreement_score, agreement.total_voters, agreement.tier,
-            )
+                # ── Adaptive learning adjustments ────────────────────────
+                rsi_avg    = float(slot_data["RSI"].mean()) if "RSI" in slot_data.columns else 50.0
+                base_conf  = prob_result.probability_score  # use prob score as base confidence
 
-            # ── Adaptive learning adjustments ────────────────────────
-            rsi_avg    = float(slot_data["RSI"].mean()) if "RSI" in slot_data.columns else 50.0
-            base_conf  = prob_result.probability_score  # use prob score as base confidence
-
-            adj_legacy = learning_engine.get_adaptive_adjustment(
-                ist_time_str, direction, int(base_conf),
-                metrics["atr_avg"], rsi_avg,
-                source="generated",
-                regime=regime,
-            )
-            if adj_legacy <= -3:
-                logger.debug(
-                    "[Learn] Veto %s %s — learning adj=%d",
-                    ist_time_str, direction, adj_legacy,
+                adj_legacy = learning_engine.get_adaptive_adjustment(
+                    ist_time_str, direction, int(base_conf),
+                    metrics["atr_avg"], rsi_avg,
+                    source="generated",
+                    regime=regime,
                 )
-                rejected_signals_list.append((ist_time_str, direction, f"learning veto (adj={adj_legacy})"))
-                continue
+                if adj_legacy <= -3:
+                    logger.debug(
+                        "[Learn] Veto %s %s — learning adj=%d",
+                        ist_time_str, direction, adj_legacy,
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"learning veto (adj={adj_legacy})"))
+                    continue
 
-            # Blend learning and timing-db adjustments into confidence
-            adj_timing       = timing_db.get_adaptive_adjustment(ist_time_str, direction, regime=regime)
-            learned_strength = timing_db.get_regime_pattern_strength(ist_time_str, direction, regime)
+                # Blend learning and timing-db adjustments into confidence
+                adj_timing       = timing_db.get_adaptive_adjustment(ist_time_str, direction, regime=regime)
+                learned_strength = timing_db.get_regime_pattern_strength(ist_time_str, direction, regime)
 
-            # Final blended confidence = prob_score (primary) + learning tweaks
-            blended_conf = probability_engine.score_to_confidence(
-                prob_result.probability_score,
-                base_conf + adj_legacy + adj_timing,
-            )
-
-            if learned_strength < PATTERN_STRENGTH_THRESHOLD and blended_conf < fallback_threshold:
-                logger.debug(
-                    "[DB] Skip %s %s — learned_str=%d blended_conf=%.1f < fallback_threshold=%.1f",
-                    ist_time_str, direction, learned_strength, blended_conf, fallback_threshold,
+                # Final blended confidence = prob_score (primary) + learning tweaks
+                blended_conf = probability_engine.score_to_confidence(
+                    prob_result.probability_score,
+                    base_conf + adj_legacy + adj_timing,
                 )
-                rejected_signals_list.append((ist_time_str, direction, f"DB strength={learned_strength} & blended_conf={blended_conf:.1f} < {fallback_threshold:.1f}"))
-                continue
 
-            # ── Live confirmation gate ────────────────────────────────
-            live_ok, live_reason, adjusted_conf = _live_confirmation_ok(
-                df, direction, blended_conf, live_direction
-            )
-            if not live_ok:
+                if learned_strength < PATTERN_STRENGTH_THRESHOLD and blended_conf < fallback_threshold:
+                    logger.debug(
+                        "[DB] Skip %s %s — learned_str=%d blended_conf=%.1f < fallback_threshold=%.1f",
+                        ist_time_str, direction, learned_strength, blended_conf, fallback_threshold,
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"DB strength={learned_strength} & blended_conf={blended_conf:.1f} < {fallback_threshold:.1f}"))
+                    continue
+
+                # ── Live confirmation gate ────────────────────────────────
+                live_ok, live_reason, adjusted_conf = _live_confirmation_ok(
+                    df, direction, blended_conf, live_direction
+                )
+                if not live_ok:
+                    logger.info(
+                        "[Pattern] Reject %s %s: %s", ist_time_str, direction, live_reason
+                    )
+                    rejected_signals_list.append((ist_time_str, direction, f"live confirmation failed: {live_reason}"))
+                    continue
+
+                if adjusted_conf < fallback_threshold:
+                    rejected_signals_list.append((ist_time_str, direction, f"adjusted_conf={adjusted_conf:.1f} < {fallback_threshold:.1f}"))
+                    continue
+
+                # ── Final pattern strength (blended) ─────────────────────
+                # 70% probability score + 30% timing-DB learned strength
+                pattern_strength = int(round(
+                    (prob_result.probability_score * 0.70) + (learned_strength * 0.30)
+                ))
+                pattern_strength = max(0, min(100, pattern_strength))
+
                 logger.info(
-                    "[Pattern] Reject %s %s: %s", ist_time_str, direction, live_reason
+                    "[Slot] %s %s | tier=%s | prob=%.1f | conf=%d | "
+                    "pat_str=%d | win=%.1f%% | rev=%.1f | zone=%s",
+                    ist_time_str, direction,
+                    prob_result.signal_tier, prob_result.probability_score,
+                    int(adjusted_conf), pattern_strength,
+                    metrics["win_rate"], metrics["reversal_risk"], vol_zone,
                 )
-                rejected_signals_list.append((ist_time_str, direction, f"live confirmation failed: {live_reason}"))
-                continue
 
-            if adjusted_conf < fallback_threshold:
-                rejected_signals_list.append((ist_time_str, direction, f"adjusted_conf={adjusted_conf:.1f} < {fallback_threshold:.1f}"))
-                continue
+                accepted_signals_list.append((ist_time_str, direction))
 
-            # ── Final pattern strength (blended) ─────────────────────
-            # 70% probability score + 30% timing-DB learned strength
-            pattern_strength = int(round(
-                (prob_result.probability_score * 0.70) + (learned_strength * 0.30)
-            ))
-            pattern_strength = max(0, min(100, pattern_strength))
+                candidates.append({
+                    "time":                           ist_time_str,
+                    "pair":                           PAIR,
+                    "direction":                      direction,
+                    # ── Centralized score (primary authority) ────────
+                    "probability_score":              round(prob_result.probability_score, 2),
+                    "signal_tier":                    prob_result.signal_tier,
+                    # ── Agreement score ───────────────────────────────
+                    "agreement_score":                agreement.agreement_score,
+                    "agreement_total":                agreement.total_voters,
+                    "agreement_tier":                 agreement.tier,
+                    "agreement_votes":                agreement.as_dict().get("votes", {}),
+                    # ── Sequence pattern ──────────────────────────
+                    "sequence_direction":             seq_result.sequence_direction,
+                    "sequence_confidence":            round(seq_result.sequence_confidence, 2),
+                    "sequence_continuation_prob":     round(seq_result.continuation_prob, 2),
+                    "sequence_patterns":              seq_result.patterns_detected,
+                    "sequence_bonus_applied":         round(seq_bonus, 2),
+                    # ── Session Intelligence ──────────────────────────────────────
+                    "session_name":                   session_detail.get("session", detect_session(ist_minutes)),
+                    "session_strength":               _metric_float(metrics, "session_strength"),
+                    "session_is_overlap":             session_detail.get("is_overlap", False),
+                    "session_adaptive_win_rate":      session_detail.get("adaptive_win_rate", 50.0),
+                    "session_vol_quality":            session_detail.get("vol_bonus", 70.0),
+                    "session_continuation":           session_detail.get("continuation_bonus", 60.0),
+                    "session_sample_size":            session_detail.get("sample_size_all", 0),
+                    # ── Published confidence (blended) ───────────────
+                    "confidence":                     int(min(99, adjusted_conf)),
+                    # ── Pattern strength ─────────────────────────────
+                    "pattern_strength":               pattern_strength,
+                    "pattern_strength_score":         pattern_strength,
+                    # ── Sub-scores (8 formula inputs) ────────────────
+                    "historical_success_rate":        _metric_float(metrics, "win_rate"),
+                    "historical_win_rate_pct":        _metric_float(metrics, "win_rate"),
+                    "bullish_frequency_pct":          _metric_float(metrics, "bullish_frequency_pct"),
+                    "bearish_frequency_pct":          _metric_float(metrics, "bearish_frequency_pct"),
+                    "direction_consistency":          _metric_float(metrics, "direction_consistency"),
+                    "atr_quality":                    _metric_float(metrics, "atr_quality"),
+                    "atr_stability":                  _metric_float(metrics, "atr_stability"),
+                    "momentum_strength":              _metric_float(metrics, "momentum_strength"),
+                    "momentum_continuation_strength": _metric_float(metrics, "momentum_strength"),
+                    "session_strength":               _metric_float(metrics, "session_strength"),
+                    "volatility_quality":             _metric_float(metrics, "volatility_quality"),
+                    "volatility_cluster_score":       _metric_float(metrics, "volatility_cluster_score"),
+                    "volatility_consistency":         _metric_float(metrics, "volatility_consistency"),
+                    "reversal_probability":           _metric_float(metrics, "reversal_probability"),
+                    "reversal_risk":                  _metric_float(metrics, "reversal_risk"),
+                    "trend_continuation_reliability": _metric_float(metrics, "trend_continuation_reliability"),
+                    # ── Score breakdown (for analysis / logging) ─────
+                    "score_breakdown": prob_result.as_dict(),
+                    # ── Confidence breakdown (formatted) ─────────────
+                    "confidence_breakdown": prob_result.get_breakdown_items(),
+                    # ── Context ──────────────────────────────────────
+                    "volatility_zone":                vol_zone,
+                    "market_profile":                 market_profile["profile"],
+                    "market_regime":                  regime,
+                    "regime_confidence":              regime_confidence,
+                    "generated_date":                 today_ist,
+                    "timezone":                       "Asia/Kolkata",
+                    "source":                         "generated",
+                    # ── Liquidity Sweep ───────────────────────────────
+                    "liquidity_sweep":                market_structure.sweep_direction or "NONE",
+                    "sweep_confidence":               round(market_structure.sweep_confidence, 1),
+                    "has_strong_sweep":               market_structure.has_strong_sweep,
+                    # ── Currency Strength ─────────────────────────────
+                    "currency_bias":                  cs_result.bias,
+                    "currency_eur_strength":          round(cs_result.eur_strength, 1),
+                    "currency_usd_strength":          round(cs_result.usd_strength, 1),
+                    "currency_strength_score":        round(cs_result.bias_confidence, 1),
+                    "currency_strength_tier":         cs_result.tier,
+                })
 
-            logger.info(
-                "[Slot] %s %s | tier=%s | prob=%.1f | conf=%d | "
-                "pat_str=%d | win=%.1f%% | rev=%.1f | zone=%s",
-                ist_time_str, direction,
-                prob_result.signal_tier, prob_result.probability_score,
-                int(adjusted_conf), pattern_strength,
-                metrics["win_rate"], metrics["reversal_risk"], vol_zone,
-            )
-
-            accepted_signals_list.append((ist_time_str, direction))
-
-            candidates.append({
-                "time":                           ist_time_str,
-                "pair":                           PAIR,
-                "direction":                      direction,
-                # ── Centralized score (primary authority) ────────
-                "probability_score":              round(prob_result.probability_score, 2),
-                "signal_tier":                    prob_result.signal_tier,
-                # ── Agreement score ───────────────────────────────
-                "agreement_score":                agreement.agreement_score,
-                "agreement_total":                agreement.total_voters,
-                "agreement_tier":                 agreement.tier,
-                "agreement_votes":                agreement.as_dict().get("votes", {}),
-                # ── Sequence pattern ──────────────────────────
-                "sequence_direction":             seq_result.sequence_direction,
-                "sequence_confidence":            round(seq_result.sequence_confidence, 2),
-                "sequence_continuation_prob":     round(seq_result.continuation_prob, 2),
-                "sequence_patterns":              seq_result.patterns_detected,
-                "sequence_bonus_applied":         round(seq_bonus, 2),
-                # ── Session Intelligence ──────────────────────────────────────
-                "session_name":                   session_detail.get("session", detect_session(ist_minutes)),
-                "session_strength":               _metric_float(metrics, "session_strength"),
-                "session_is_overlap":             session_detail.get("is_overlap", False),
-                "session_adaptive_win_rate":      session_detail.get("adaptive_win_rate", 50.0),
-                "session_vol_quality":            session_detail.get("vol_bonus", 70.0),
-                "session_continuation":           session_detail.get("continuation_bonus", 60.0),
-                "session_sample_size":            session_detail.get("sample_size_all", 0),
-                # ── Published confidence (blended) ───────────────
-                "confidence":                     int(min(99, adjusted_conf)),
-                # ── Pattern strength ─────────────────────────────
-                "pattern_strength":               pattern_strength,
-                "pattern_strength_score":         pattern_strength,
-                # ── Sub-scores (8 formula inputs) ────────────────
-                "historical_success_rate":        _metric_float(metrics, "win_rate"),
-                "historical_win_rate_pct":        _metric_float(metrics, "win_rate"),
-                "bullish_frequency_pct":          _metric_float(metrics, "bullish_frequency_pct"),
-                "bearish_frequency_pct":          _metric_float(metrics, "bearish_frequency_pct"),
-                "direction_consistency":          _metric_float(metrics, "direction_consistency"),
-                "atr_quality":                    _metric_float(metrics, "atr_quality"),
-                "atr_stability":                  _metric_float(metrics, "atr_stability"),
-                "momentum_strength":              _metric_float(metrics, "momentum_strength"),
-                "momentum_continuation_strength": _metric_float(metrics, "momentum_strength"),
-                "session_strength":               _metric_float(metrics, "session_strength"),
-                "volatility_quality":             _metric_float(metrics, "volatility_quality"),
-                "volatility_cluster_score":       _metric_float(metrics, "volatility_cluster_score"),
-                "volatility_consistency":         _metric_float(metrics, "volatility_consistency"),
-                "reversal_probability":           _metric_float(metrics, "reversal_probability"),
-                "reversal_risk":                  _metric_float(metrics, "reversal_risk"),
-                "trend_continuation_reliability": _metric_float(metrics, "trend_continuation_reliability"),
-                # ── Score breakdown (for analysis / logging) ─────
-                "score_breakdown": prob_result.as_dict(),
-                # ── Confidence breakdown (formatted) ─────────────
-                "confidence_breakdown": prob_result.get_breakdown_items(),
-                # ── Context ──────────────────────────────────────
-                "volatility_zone":                vol_zone,
-                "market_profile":                 market_profile["profile"],
-                "market_regime":                  regime,
-                "regime_confidence":              regime_confidence,
-                "generated_date":                 today_ist,
-                "timezone":                       "Asia/Kolkata",
-                "source":                         "generated",
-                # ── Liquidity Sweep ───────────────────────────────
-                "liquidity_sweep":                market_structure.sweep_direction or "NONE",
-                "sweep_confidence":               round(market_structure.sweep_confidence, 1),
-                "has_strong_sweep":               market_structure.has_strong_sweep,
-                # ── Currency Strength ─────────────────────────────
-                "currency_bias":                  cs_result.bias,
-                "currency_eur_strength":          round(cs_result.eur_strength, 1),
-                "currency_usd_strength":          round(cs_result.usd_strength, 1),
-                "currency_strength_score":        round(cs_result.bias_confidence, 1),
-                "currency_strength_tier":         cs_result.tier,
-            })
-
-    # ── Rank and select (adaptive count within target_min–target_max) ───
+        # ── Rank and select (adaptive count within target_min–target_max) ───
+        
+        acceptance_rate = len(accepted_signals_list) / generated_candidates_count if generated_candidates_count > 0 else 0
+        if attempt == 0 and acceptance_rate < 0.10:
+            logger.info(f"Acceptance rate {acceptance_rate*100:.1f}% < 10%. Moderately reducing thresholds for retry.")
+            if regime == "TRENDING":
+                current_regime_floor = 60.0
+            elif regime == "SIDEWAYS":
+                current_regime_floor = 70.0
+            else:
+                current_regime_floor = 62.0  # MODERATE / HIGH_VOLATILITY / REVERSAL_HEAVY
+            fallback_threshold = current_regime_floor
+            continue
+        
+        break
+    
     final = _select_ranked_with_cooldown(candidates, total_target=total_target)
 
     # ── Adaptive count adjustment ─────────────────────────────────
@@ -1544,8 +1561,23 @@ def calculate_recurring_strength(df: pd.DataFrame) -> list[dict]:
         len(final),
         (_last_diagnostics.dominant_reject_reason() if _last_diagnostics else "N/A"),
     )
-    for r in rejected_signals_list:
-        logger.debug("  Rejected %s %s → %s", r[0], r[1], r[2])
+    
+    logger.info("--- Generated Candidates ---")
+    logger.info(f"Total candidates generated: {generated_candidates_count}")
+    
+    logger.info("--- Accepted Signals ---")
+    if accepted_signals_list:
+        for a in accepted_signals_list:
+            logger.info("  Accepted %s %s", a[0], a[1])
+    else:
+        logger.info("  No signals accepted.")
+        
+    logger.info("--- Rejected Signals ---")
+    if rejected_signals_list:
+        for r in rejected_signals_list:
+            logger.info("  Rejected %s %s → %s", r[0], r[1], r[2])
+    else:
+        logger.info("  No signals rejected.")
 
     return final
 

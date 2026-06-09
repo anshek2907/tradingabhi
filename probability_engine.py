@@ -538,7 +538,7 @@ class ProbabilityEngine:
         return result.signal_tier != TIER_SKIP
 
     @staticmethod
-    def is_acceptable_for_regime(result: ProbabilityResult, regime: str) -> bool:
+    def is_acceptable_for_regime(result: ProbabilityResult, regime: str, min_score_override: float = None) -> bool:
         """
         Regime-aware acceptability gate.
 
@@ -549,12 +549,17 @@ class ProbabilityEngine:
           1. Not be SKIP tier (universal gate), AND
           2. Meet or exceed the regime-specific minimum score.
 
-        This prevents over-rejection while still protecting against
-        weak signals in difficult market conditions.
+        If min_score_override is provided, the strict TIER_SKIP gate is bypassed
+        and we solely evaluate against the overridden minimum.
         """
+        min_score = min_score_override if min_score_override is not None else _regime_min_score(regime)
+
+        if min_score_override is not None:
+            return result.probability_score >= min_score
+
         if result.signal_tier == TIER_SKIP:
             return False
-        min_score = _regime_min_score(regime)
+            
         return result.probability_score >= min_score
 
     @staticmethod
