@@ -380,7 +380,7 @@ def maybe_send_daily_signal_list():
         if agr_line:
             lines.append(agr_line)
         if regime:
-            lines.append(f"Regime: {regime}")
+            lines.append(f"Regime: {str(regime).replace('_', ' ')}")
 
         # Confidence breakdown block
         if breakdown_items:
@@ -388,9 +388,10 @@ def maybe_send_daily_signal_list():
             lines.append("📊 Confidence Breakdown")
             max_lbl = max(len(lbl) for lbl, _ in breakdown_items)
             for lbl, pts in breakdown_items:
+                lbl_clean = str(lbl).replace('_', ' ')
                 sign = "+" if pts >= 0 else ""
                 pad  = " " * (max_lbl - len(lbl) + 2)
-                lines.append(f"  {lbl}:{pad}{sign}{pts}")
+                lines.append(f"  {lbl_clean}:{pad}{sign}{pts}")
             lines.append(f"  {'─' * (max_lbl + 6)}")
             if prob != "":
                 final_score = int(round(float(prob)))
@@ -415,7 +416,7 @@ def maybe_send_daily_signal_list():
             br_regime = bt_data.get("top_regime",          "?")
             br_rwr    = bt_data.get("top_regime_win_rate",  "?")
             briefing_lines.append(
-                f"14-day: wr={br_wr}% | best_regime={br_regime} ({br_rwr}%)"
+                f"14-day: wr={br_wr}% | best regime={str(br_regime).replace('_', ' ')} ({br_rwr}%)"
             )
     except Exception:
         pass
@@ -493,7 +494,7 @@ def maybe_send_daily_swing_signal_list():
         lines.append("")
         lines.append(f"Confidence: {sig['confidence']}%")
         lines.append(f"Agreement: {sig['agreement']}")
-        lines.append(f"Regime: {sig['regime']}")
+        lines.append(f"Regime: {str(sig['regime']).replace('_', ' ')}")
         lines.append("")
         lines.append("Expected Hold:")
         lines.append("15m–1H+")

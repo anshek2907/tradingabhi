@@ -168,7 +168,7 @@ def format_diagnostic_summary(d: "SignalDiagnostics") -> str:
 
     # ── Market context ───────────────────────────────────────────────
     regime_conf_pct = int(d.regime_confidence)
-    lines.append(f"Regime: *{d.regime}* ({regime_conf_pct}% conf)")
+    lines.append(f"Regime: *{str(d.regime).replace('_', ' ')}* ({regime_conf_pct}% conf)")
     # Currency strength
     bias_arrow = "↑" if d.currency_bias == "CALL" else "↓" if d.currency_bias == "PUT" else "→"
     lines.append(

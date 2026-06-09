@@ -1542,7 +1542,7 @@ def _process_forced_signals(
 
                 if block_reason:
                     logger.warning(f"[FORCED] Signal blocked: {block_reason}")
-                    msg = f"⚠️ <b>Forced signal blocked due to dangerous market conditions</b>\nReason: {block_reason}"
+                    msg = f"⚠️ **Forced signal blocked due to dangerous market conditions**\nReason: {str(block_reason).replace('_', ' ')}"
                     messages.append(msg)
                     signal["is_blocked"] = True
                     continue
@@ -1592,7 +1592,7 @@ def _process_forced_signals(
                 if block_reason:
                     logger.warning(f"[FORCED] Confirmation blocked: {block_reason}")
                     if not signal.get("is_blocked"):
-                        msg = f"⚠️ <b>Forced signal blocked due to dangerous market conditions</b>\nReason: {block_reason}"
+                        msg = f"⚠️ **Forced signal blocked due to dangerous market conditions**\nReason: {str(block_reason).replace('_', ' ')}"
                         messages.append(msg)
                     signal["is_blocked"] = True
                     continue
